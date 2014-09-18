@@ -11,6 +11,7 @@ import java.awt.Shape;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
 
 import javax.swing.BorderFactory;
 import javax.swing.GroupLayout;
@@ -20,7 +21,9 @@ import javax.swing.JComboBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JSpinner;
 import javax.swing.JTextArea;
 import javax.swing.JTextPane;
@@ -76,6 +79,8 @@ public class TextFrame extends JFrame {
 	
 	private StyledDocument _doc;
 	
+	private JProgressBar _TextProgressBar;
+	
 	public TextFrame() {
 		createAndShowGui();
 		
@@ -105,7 +110,12 @@ public class TextFrame extends JFrame {
 		confirmationPanel.setLayout(new FlowLayout(FlowLayout.TRAILING));
 		
 		//preferredSize width=495, height 210
-		_textForOpen = new JTextPane(new DefaultStyledDocument()  {;
+		_textForOpen = new JTextPane();
+		
+		//bug fix from http://java-sl.com/tip_java7_text_wrapping_bug_fix.html written by Stanislav Lapitsky
+		_textForOpen.setEditorKit(new MyStyledEditorKit());
+		
+		_textForOpen.setStyledDocument(new DefaultStyledDocument()  {;
 			
 			int max = 30;
 			@Override
@@ -118,9 +128,6 @@ public class TextFrame extends JFrame {
 		        }
 		    }
 		} );
-		
-		//bug fix from http://java-sl.com/tip_java7_text_wrapping_bug_fix.html written by Stanislav Lapitsky
-		_textForOpen.setEditorKit(new MyStyledEditorKit());
 		_doc = _textForOpen.getStyledDocument();
         _doc.addDocumentListener(new DocumentListener() {
              public void insertUpdate(DocumentEvent e) {
@@ -151,9 +158,51 @@ public class TextFrame extends JFrame {
 		
 		_textForClose = new JTextPane();
 		
+		//bug fix from http://java-sl.com/tip_java7_text_wrapping_bug_fix.html written by Stanislav Lapitsky
+		_textForClose.setEditorKit(new MyStyledEditorKit());
+				
+		_textForClose.setStyledDocument(new DefaultStyledDocument()  {;
+					
+					int max = 30;
+					@Override
+				    public void insertString(int offs, String str, AttributeSet attr)throws BadLocationException{
+				        if ((getLength() + str.length()) <= max) {
+				            super.insertString(offs, str, attr);
+				        }
+				        else {
+				            Toolkit.getDefaultToolkit().beep();
+				        }
+				    }
+				} );
+				_doc = _textForClose.getStyledDocument();
+		        _doc.addDocumentListener(new DocumentListener() {
+		             public void insertUpdate(DocumentEvent e) {
+		                insert();
+		            }
+		 
+		            public void removeUpdate(DocumentEvent e) {
+		                insert();
+		            }
+		 
+		            public void changedUpdate(DocumentEvent e) {
+		                insert();
+		            }
+		 
+		            public void insert() {
+		                SwingUtilities.invokeLater(new Runnable() {
+		                     public void run() {
+		                        Style defaultStyle = _textForClose.getStyle(StyleContext.DEFAULT_STYLE);
+		                        _doc.setCharacterAttributes(0, _doc.getLength(), defaultStyle, false);
+		                    }
+		                });
+		                }
+		  });
+		  //---------------------------------------------------------------------------------------		
+		
 		_textForClose.setPreferredSize(new Dimension(495,210));
 		_textForClose.setBorder(loweredetched); 
 		
+		_TextProgressBar = new JProgressBar();
 		
 		_openLabel = new JLabel("Enter text below for opening scene");
 		_closeLabel = new JLabel("Enter text below for closing scene");
@@ -232,6 +281,28 @@ public class TextFrame extends JFrame {
 			
 		});
 		
+		_cancelButton.addActionListener(new ActionListener(){
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				//yes == 0, no == 1
+				int yn = JOptionPane.showConfirmDialog(TextFrame.this,
+					    "Would you like to quit editing text ?",
+					    "Warning",
+					    JOptionPane.YES_NO_OPTION);
+				
+				//quiting
+				if (yn == 0) {
+					System.out.println(1);
+					TextFrame.this.dispatchEvent(new WindowEvent(TextFrame.this, WindowEvent.WINDOW_CLOSING));
+				}
+
+			
+			}
+		
+		});
+		
 		JFormattedTextField txt = ((JSpinner.NumberEditor) _fontSizeSpinner.getEditor()).getTextField();
 		((NumberFormatter) txt.getFormatter()).setAllowsInvalid(false);
 		
@@ -271,6 +342,7 @@ public class TextFrame extends JFrame {
 		
 		textPanel.add(previewPanel, BorderLayout.LINE_END);
 		textPanel.add(editingPanel, BorderLayout.LINE_START);
+		textPanel.add(_TextProgressBar, BorderLayout.SOUTH);
 		
 		
 		
