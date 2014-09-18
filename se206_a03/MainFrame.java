@@ -4,6 +4,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.SwingWorker;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.JButton;
@@ -18,6 +19,7 @@ import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.List;
 
 import javax.swing.JProgressBar;
 
@@ -84,11 +86,11 @@ public class MainFrame extends JFrame implements ActionListener {
         mainPane.add(btnAddText);
         
         progressBar = new JProgressBar();
-        progressBar.setBounds(191, 56, 146, 20);
+        progressBar.setBounds(138, 56, 146, 20);
         mainPane.add(progressBar);
         
         JLabel lblDownloadProgress = new JLabel("Download Progress:");
-        lblDownloadProgress.setBounds(38, 56, 146, 20);
+        lblDownloadProgress.setBounds(5, 56, 146, 20);
         mainPane.add(lblDownloadProgress);
     }
     
@@ -109,8 +111,39 @@ public class MainFrame extends JFrame implements ActionListener {
             // PlayFrame playframe=new PlayFrame();
             
         } else if (arg0.getSource() == btnStartDownload) {
-            
+            progressBar.setMinimum(0);
+            progressBar.setMaximum(100);
+            DownloadWorker worker=new DownloadWorker();
+            worker.execute();
         }
+        
+    }
+    class DownloadWorker extends SwingWorker<Void, Integer>{
+        
+        @Override
+        protected Void doInBackground() throws Exception {
+            for(int i=0;i<=100;i++){
+                publish(i);
+                String url = downloadURL.getText();
+                String cmd = "wget " + url;
+                ProcessBuilder pb = new ProcessBuilder("bash", "-c", cmd);
+                pb.redirectErrorStream(true);
+                pb.start();
+                
+            }
+            return null;
+        }
+         protected void process(List<Integer> chunks) {
+                
+             for (int i : chunks)
+                 progressBar.setValue(i);
+         }
+         protected void done(){
+             String fileName = downloadURL.getText().substring(
+                        downloadURL.getText().lastIndexOf('/') + 1,
+                        downloadURL.getText().length());
+             currentFIle.setText(fileName+" has been downloaded");
+         }
         
     }
     
@@ -149,3 +182,4 @@ public class MainFrame extends JFrame implements ActionListener {
     }
     
 }
+
