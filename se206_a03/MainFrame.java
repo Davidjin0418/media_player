@@ -1,5 +1,7 @@
 package se206_a03;
 
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -16,12 +18,15 @@ import javax.swing.JTextField;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
 
 import javax.swing.JProgressBar;
+import javax.swing.SwingConstants;
 
 public class MainFrame extends JFrame implements ActionListener {
     
@@ -36,8 +41,9 @@ public class MainFrame extends JFrame implements ActionListener {
     
     /**
      * Create the frame.
+     * @throws IOException 
      */
-    public MainFrame() {
+    public MainFrame() throws IOException {
         setTitle("Welcome to VAMIX");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setBounds(100, 100, 450, 300);
@@ -108,7 +114,7 @@ public class MainFrame extends JFrame implements ActionListener {
             }
         } else if (arg0.getSource() == btnPlay) {
             //create a play frame window.
-            // PlayFrame playframe=new PlayFrame();
+            PlayFrame playframe=new PlayFrame();
             
         } else if (arg0.getSource() == btnStartDownload) {
             progressBar.setMinimum(0);
@@ -120,31 +126,31 @@ public class MainFrame extends JFrame implements ActionListener {
     }
     class DownloadWorker extends SwingWorker<Void, Integer>{
         
-        @Override
-        protected Void doInBackground() throws Exception {
-            for(int i=0;i<=100;i++){
-                publish(i);
-                String url = downloadURL.getText();
-                String cmd = "wget " + url;
-                ProcessBuilder pb = new ProcessBuilder("bash", "-c", cmd);
-                pb.redirectErrorStream(true);
-                pb.start();
-                
-            }
-            return null;
-        }
-         protected void process(List<Integer> chunks) {
-                
-             for (int i : chunks)
-                 progressBar.setValue(i);
-         }
-         protected void done(){
-             String fileName = downloadURL.getText().substring(
-                        downloadURL.getText().lastIndexOf('/') + 1,
-                        downloadURL.getText().length());
-             currentFIle.setText(fileName+" has been downloaded");
-         }
-        
+		@Override
+		protected Void doInBackground() throws Exception {
+			for(int i=0;i<=100;i++){
+				publish(i);
+				String url = downloadURL.getText();
+				String cmd = "wget " + url;
+				ProcessBuilder pb = new ProcessBuilder("bash", "-c", cmd);
+				pb.redirectErrorStream(true);
+				pb.start();
+				
+			}
+			return null;
+		}
+		 protected void process(List<Integer> chunks) {
+				
+	    	 for (int i : chunks)
+	    		 progressBar.setValue(i);
+	     }
+		 protected void done(){
+			 String fileName = downloadURL.getText().substring(
+						downloadURL.getText().lastIndexOf('/') + 1,
+						downloadURL.getText().length());
+			 currentFIle.setText(fileName+" has been downloaded");
+		 }
+    	
     }
     
     
@@ -180,6 +186,5 @@ public class MainFrame extends JFrame implements ActionListener {
             }
         }
     }
-    
 }
 
