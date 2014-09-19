@@ -12,6 +12,7 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
+import java.io.File;
 
 import javax.swing.BorderFactory;
 import javax.swing.GroupLayout;
@@ -56,7 +57,9 @@ import javax.swing.text.View;
 import javax.swing.text.ViewFactory;
 
 
-public class TextFrame extends JFrame {
+public class TextFrame extends JFrame implements ActionListener {
+	
+	
 	
 	private JTextPane _textForOpen;
 	private JTextPane _textForClose;
@@ -202,7 +205,8 @@ public class TextFrame extends JFrame {
 		_textForClose.setPreferredSize(new Dimension(495,210));
 		_textForClose.setBorder(loweredetched); 
 		
-		_TextProgressBar = new JProgressBar();
+		
+		_TextProgressBar = new JProgressBar(0, 100);
 		
 		_openLabel = new JLabel("Enter text below for opening scene");
 		_closeLabel = new JLabel("Enter text below for closing scene");
@@ -210,11 +214,15 @@ public class TextFrame extends JFrame {
 		_fontSizeSpinner = new JSpinner(new SpinnerNumberModel(_textForOpen.getFont().getSize(), 5, 72, 1));
 		_colourButton = new JButton("colour");
 		
-		String fonts[] = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
-		_fontDropBox = new JComboBox(fonts);
 		
-		for (int i =0; i<fonts.length; i++) {
-			if (_textForOpen.getFont().getName().equals(fonts[i]) ) {
+		Font defaultFont = new Font ("Ubuntu",_textForOpen.getFont().getStyle(), _textForOpen.getFont().getSize());
+		_textForOpen.setFont(defaultFont);
+		_textForClose.setFont(defaultFont);
+		String ubuntuFont[] = {"Ubuntu", "Ubuntu Condensed", "Ubuntu Light", "Ubuntu Medium", "Ubunutu Mono"};
+		_fontDropBox = new JComboBox(ubuntuFont);
+		
+		for (int i =0; i<ubuntuFont.length; i++) {
+			if (_textForOpen.getFont().getName().equals(ubuntuFont[i]) ) {
 				_fontDropBox.setSelectedIndex(i);
 			}
 		}
@@ -239,32 +247,10 @@ public class TextFrame extends JFrame {
 		confirmationPanel.add(_applyButton);
 		confirmationPanel.add(_cancelButton);
 		
-		_colourButton.addActionListener(new ActionListener(){
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// TODO Auto-generated method stub
-				Color color = JColorChooser.showDialog(TextFrame.this, "Text Color", _textForOpen.getForeground());
-				if (color != null) {
-					_textForOpen.setForeground(color);
-					_textForOpen.updateUI();
-				}
-			}
-			
-		});
-		
-		_fontDropBox.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// TODO Auto-generated method stub
-				String fontName = (String) _fontDropBox.getSelectedItem();
-				int style = _textForOpen.getFont().getStyle();
-				int size = _textForOpen.getFont().getSize();
-				_textForOpen.setFont(new Font(fontName, style, size));
-			}
-			
-		});
+		_colourButton.addActionListener(this);
+		_fontDropBox.addActionListener(this);
+		_cancelButton.addActionListener(this);
+		_okButton.addActionListener(this);
 		
 		_fontSizeSpinner.addChangeListener(new ChangeListener() {
 
@@ -281,27 +267,7 @@ public class TextFrame extends JFrame {
 			
 		});
 		
-		_cancelButton.addActionListener(new ActionListener(){
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// TODO Auto-generated method stub
-				//yes == 0, no == 1
-				int yn = JOptionPane.showConfirmDialog(TextFrame.this,
-					    "Would you like to quit editing text ?",
-					    "Warning",
-					    JOptionPane.YES_NO_OPTION);
-				
-				//quiting
-				if (yn == 0) {
-					System.out.println(1);
-					TextFrame.this.dispatchEvent(new WindowEvent(TextFrame.this, WindowEvent.WINDOW_CLOSING));
-				}
-
-			
-			}
 		
-		});
 		
 		JFormattedTextField txt = ((JSpinner.NumberEditor) _fontSizeSpinner.getEditor()).getTextField();
 		((NumberFormatter) txt.getFormatter()).setAllowsInvalid(false);
@@ -350,11 +316,51 @@ public class TextFrame extends JFrame {
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		//create a tab panel to hold other panel
 		
+		
 		this.setSize(1280,720);
 		this.setResizable(false);
 		this.setLocationRelativeTo(null);
 		//this.pack();
 		this.setVisible(true);
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		// TODO Auto-generated method stub
+		if (e.getSource() == _cancelButton) {
+			int yn = JOptionPane.showConfirmDialog(TextFrame.this,
+				    "Would you like to quit editing text ?",
+				    "Warning",
+				    JOptionPane.YES_NO_OPTION);
+			
+			//quiting
+			if (yn == 0) {
+				System.out.println(1);
+				TextFrame.this.dispatchEvent(new WindowEvent(TextFrame.this, WindowEvent.WINDOW_CLOSING));
+			}
+		}
+		else if (e.getSource() == _fontDropBox) {
+			String fontName = (String) _fontDropBox.getSelectedItem();
+			int style = _textForOpen.getFont().getStyle();
+			int size = _textForOpen.getFont().getSize();
+			_textForOpen.setFont(new Font(fontName, style, size));
+			_textForClose.setFont(new Font(fontName, style, size));
+			
+		}
+		else if (e.getSource() == _colourButton) {
+			Color color = JColorChooser.showDialog(TextFrame.this, "Text Color", _textForOpen.getForeground());
+			if (color != null) {
+				_textForOpen.setForeground(color);
+				_textForOpen.updateUI();
+				_textForClose.setForeground(color);
+				_textForClose.updateUI();
+			}
+		}
+		else if (e.getSource() == _okButton) {
+			File file = new File("/home/john/workspace/vlc/test.mp4");
+			TextFilterWorker worker = new TextFilterWorker(file, _TextProgressBar, _textForOpen.getFont(), _textForOpen.getForeground(), _textForOpen.getText());
+			worker.execute();
+		}
 	}
 
 }
