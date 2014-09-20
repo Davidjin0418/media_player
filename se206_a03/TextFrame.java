@@ -2,6 +2,8 @@ package se206_a03;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -12,6 +14,7 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.io.File;
 
 import javax.swing.BorderFactory;
@@ -19,6 +22,7 @@ import javax.swing.GroupLayout;
 import javax.swing.JButton;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -57,7 +61,7 @@ import javax.swing.text.View;
 import javax.swing.text.ViewFactory;
 
 
-public class TextFrame extends JFrame implements ActionListener {
+public class TextFrame extends JFrame implements ActionListener, WindowListener {
 	
 	
 	
@@ -83,6 +87,8 @@ public class TextFrame extends JFrame implements ActionListener {
 	private StyledDocument _doc;
 	
 	private JProgressBar _TextProgressBar;
+	
+	private TextFilterWorker _currentTextWorker = null;
 	
 	public TextFrame() {
 		createAndShowGui();
@@ -309,14 +315,13 @@ public class TextFrame extends JFrame implements ActionListener {
 		textPanel.add(previewPanel, BorderLayout.LINE_END);
 		textPanel.add(editingPanel, BorderLayout.LINE_START);
 		textPanel.add(_TextProgressBar, BorderLayout.SOUTH);
-		
-		
+		//disableAllComp(editingPanel);
 		
 		setTitle("Text Editing");
-		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		//create a tab panel to hold other panel
 		
-		
+		this.addWindowListener(this);
 		this.setSize(1280,720);
 		this.setResizable(false);
 		this.setLocationRelativeTo(null);
@@ -335,7 +340,6 @@ public class TextFrame extends JFrame implements ActionListener {
 			
 			//quiting
 			if (yn == 0) {
-				System.out.println(1);
 				TextFrame.this.dispatchEvent(new WindowEvent(TextFrame.this, WindowEvent.WINDOW_CLOSING));
 			}
 		}
@@ -359,9 +363,80 @@ public class TextFrame extends JFrame implements ActionListener {
 		else if (e.getSource() == _okButton) {
 			File file = new File("/home/john/workspace/vlc/test.mp4");
 			TextFilterWorker worker = new TextFilterWorker(file, _TextProgressBar, _textForOpen.getFont(), _textForOpen.getForeground(), _textForOpen.getText());
+			_currentTextWorker = worker;
 			worker.execute();
 		}
 	}
+	
+	private void disableAllComp(Component c) {
+		if ( c instanceof JPanel) {
+			for (int i =0; i<(((JPanel)c).getComponentCount()); i++) {
+				System.out.print(i);
+				disableAllComp(((JPanel)c).getComponent(i));
+				c.setEnabled(false);
+			}
+		}
+		else {
+			c.setEnabled(false);
+			
+		}
+	}
+
+	@Override
+	public void windowOpened(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowClosing(WindowEvent e) {
+		// TODO Auto-generated method stub
+		if (_currentTextWorker != null) {
+			if (_currentTextWorker.isDone() == false) {
+				int yn = JOptionPane.showConfirmDialog(TextFrame.this,
+					    "The video is still processing, do you want to quit ? \n(Quitting will abandon the operation)",
+					    "Warning",
+					    JOptionPane.YES_NO_OPTION);
+				
+				if (yn == 0) {
+					_currentTextWorker.cancel(true);
+					this.dispose();
+				}
+			}
+		}
+		this.dispose();
+	}
+
+	@Override
+	public void windowClosed(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowIconified(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowDeiconified(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowActivated(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowDeactivated(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
 
 }
 
@@ -455,3 +530,5 @@ class MyLabelView extends LabelView {
     }
 }
 //---------------------------------------------------------------------------
+
+
