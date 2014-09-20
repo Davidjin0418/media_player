@@ -212,7 +212,7 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 		_textForClose.setBorder(loweredetched); 
 		
 		
-		_TextProgressBar = new JProgressBar(0, 100);
+		_TextProgressBar = new JProgressBar(0, 10000);
 		
 		_openLabel = new JLabel("Enter text below for opening scene");
 		_closeLabel = new JLabel("Enter text below for closing scene");
@@ -398,8 +398,13 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 					this.dispose();
 				}
 			}
+			else {
+				this.dispose();
+			}
 		}
-		this.dispose();
+		else {
+			this.dispose();
+		}
 	}
 
 	@Override
