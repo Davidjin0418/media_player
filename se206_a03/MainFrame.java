@@ -22,8 +22,11 @@ import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.JProgressBar;
 import javax.swing.SwingConstants;
@@ -128,7 +131,7 @@ public class MainFrame extends JFrame implements ActionListener {
         
 		@Override
 		protected Void doInBackground() throws Exception {
-			for(int i=0;i<=100;i++){
+			/*for(int i=0;i<=100;i++){
 				publish(i);
 				String url = downloadURL.getText();
 				String cmd = "wget " + url;
@@ -136,6 +139,45 @@ public class MainFrame extends JFrame implements ActionListener {
 				pb.redirectErrorStream(true);
 				pb.start();
 				
+			}*/
+			String url = downloadURL.getText();
+			String cmd = "wget " + url;
+			ProcessBuilder pb = new ProcessBuilder("bash", "-c", cmd);
+			
+			pb.redirectErrorStream(true);
+			
+			Process process;
+			try {
+				//start the wget command
+				process = pb.start();
+				
+				//getting the input stream to read the command output
+				InputStream stdout = process.getInputStream();		
+				BufferedReader stdoutBuffered = new BufferedReader(new InputStreamReader(stdout));
+				String line;
+				
+				//reading each line of the command's output
+				while ((line = stdoutBuffered.readLine()) != null  && !isCancelled()) {
+					//parsing each line to find the % completion of the mp3 file
+					Pattern patt = Pattern.compile("(\\d{1,3})%");
+					Matcher mat = patt.matcher(line);
+					if (mat.find()){
+						//checking where the download is on the table and publish the % 
+						publish(Integer.parseInt(mat.group(1)));
+					}			
+					System.out.println(line);
+					
+				}
+				
+				//wait for the wget command to finish if the worker is not cancelled
+				
+				process.getInputStream().close();
+		        process.getOutputStream().close();
+		        process.getErrorStream().close();
+		        process.destroy();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 			return null;
 		}
