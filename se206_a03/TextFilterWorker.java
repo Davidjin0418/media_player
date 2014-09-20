@@ -11,7 +11,9 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.swing.JButton;
 import javax.swing.JProgressBar;
+import javax.swing.JTextPane;
 import javax.swing.SwingWorker;
 
 public class TextFilterWorker extends SwingWorker<Integer, Integer> {
@@ -20,15 +22,19 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 	JProgressBar _bar;
 	Font _textFont;
 	Color _textColour;
-	String _text;
+	String _openText;
+	String _closeText;
+	JButton _button;
 	int _exitStatus;
 	
-	public TextFilterWorker(File file , JProgressBar progress, Font font, Color color, String msg) {
+	public TextFilterWorker(File file , JProgressBar progress, JTextPane _textForOpen, JTextPane _textForClose, JButton _okButton) {
 		_videoFile = file;
 		_bar = progress;
-		_textFont = font;
-		_textColour = color;
-		_text= msg;
+		_textFont = _textForOpen.getFont();
+		_textColour = _textForOpen.getForeground();
+		_openText= _textForOpen.getText();
+		_closeText = _textForClose.getText();
+		_button = _okButton;
 	}
 
 	@Override
@@ -55,7 +61,7 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 			cmd.append("/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-C.ttf':");
 		}	
 	
-		cmd.append("text='" + _text + "':");
+		cmd.append("text='" + _openText + "':");
 		cmd.append("x=50:");
 		cmd.append("y=50:");
 		cmd.append("fontsize=" + _textFont.getSize() + ":");
@@ -155,8 +161,12 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 			}
 			else {
 				//need indicate to the user. 
-			}
+			}	
 		}
+		else {
+			_bar.setValue(0);
+		}
+		_button.setEnabled(true);
 		
 	}
 	

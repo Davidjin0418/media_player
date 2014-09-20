@@ -81,8 +81,8 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 	private JLabel _fontSizeLabel;
 	
 	private JButton _okButton;
+	private JButton _quitButton;
 	private JButton _cancelButton;
-	private JButton _applyButton;
 	
 	private StyledDocument _doc;
 	
@@ -237,8 +237,8 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 		_fontStyleLabel = new JLabel("Font Style");
 		
 		_okButton = new JButton("Ok");
+		_quitButton = new JButton("Quit");
 		_cancelButton = new JButton("Cancel");
-		_applyButton = new JButton("Apply");
 		
 		
 		
@@ -250,13 +250,14 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 		fontSettingPanel.add(_fontSizeSpinner);
 		
 		confirmationPanel.add(_okButton);
-		confirmationPanel.add(_applyButton);
 		confirmationPanel.add(_cancelButton);
+		confirmationPanel.add(_quitButton);
 		
 		_colourButton.addActionListener(this);
 		_fontDropBox.addActionListener(this);
-		_cancelButton.addActionListener(this);
+		_quitButton.addActionListener(this);
 		_okButton.addActionListener(this);
+		_cancelButton.addActionListener(this);
 		
 		_fontSizeSpinner.addChangeListener(new ChangeListener() {
 
@@ -315,7 +316,7 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 		textPanel.add(previewPanel, BorderLayout.LINE_END);
 		textPanel.add(editingPanel, BorderLayout.LINE_START);
 		textPanel.add(_TextProgressBar, BorderLayout.SOUTH);
-		//disableAllComp(editingPanel);
+
 		
 		setTitle("Text Editing");
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -332,7 +333,7 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		// TODO Auto-generated method stub
-		if (e.getSource() == _cancelButton) {
+		if (e.getSource() == _quitButton) {
 			int yn = JOptionPane.showConfirmDialog(TextFrame.this,
 				    "Would you like to quit editing text ?",
 				    "Warning",
@@ -362,31 +363,25 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 		}
 		else if (e.getSource() == _okButton) {
 			File file = new File("/home/john/workspace/vlc/test.mp4");
-			TextFilterWorker worker = new TextFilterWorker(file, _TextProgressBar, _textForOpen.getFont(), _textForOpen.getForeground(), _textForOpen.getText());
+			TextFilterWorker worker = new TextFilterWorker(file, _TextProgressBar, _textForOpen, _textForClose, _okButton);
 			_currentTextWorker = worker;
 			worker.execute();
+			_okButton.setEnabled(false);
 		}
-	}
-	
-	private void disableAllComp(Component c) {
-		if ( c instanceof JPanel) {
-			for (int i =0; i<(((JPanel)c).getComponentCount()); i++) {
-				System.out.print(i);
-				disableAllComp(((JPanel)c).getComponent(i));
-				c.setEnabled(false);
+		else if (e.getSource() == _cancelButton) {
+			if (_currentTextWorker != null) {
+				_currentTextWorker.cancel(true);
 			}
-		}
-		else {
-			c.setEnabled(false);
 			
 		}
+		
+		
+
 	}
+	
 
 	@Override
-	public void windowOpened(WindowEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
+	public void windowOpened(WindowEvent e) {}
 
 	@Override
 	public void windowClosing(WindowEvent e) {
@@ -408,34 +403,19 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 	}
 
 	@Override
-	public void windowClosed(WindowEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
+	public void windowClosed(WindowEvent e) {}
 
 	@Override
-	public void windowIconified(WindowEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
+	public void windowIconified(WindowEvent e) {}
 
 	@Override
-	public void windowDeiconified(WindowEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
+	public void windowDeiconified(WindowEvent e) {}
 
 	@Override
-	public void windowActivated(WindowEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
+	public void windowActivated(WindowEvent e) {}
 
 	@Override
-	public void windowDeactivated(WindowEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
+	public void windowDeactivated(WindowEvent e) {}
 
 
 }
