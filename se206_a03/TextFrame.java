@@ -15,7 +15,14 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import javax.swing.BorderFactory;
 import javax.swing.GroupLayout;
@@ -83,6 +90,7 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 	private JButton _okButton;
 	private JButton _quitButton;
 	private JButton _cancelButton;
+	private JButton _saveTextButton;
 	
 	private StyledDocument _doc;
 	
@@ -121,55 +129,33 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 		//preferredSize width=495, height 210
 		_textForOpen = new JTextPane();
 		
-		//bug fix from http://java-sl.com/tip_java7_text_wrapping_bug_fix.html written by Stanislav Lapitsky
-		_textForOpen.setEditorKit(new MyStyledEditorKit());
-		
-		_textForOpen.setStyledDocument(new DefaultStyledDocument()  {;
-			
-			int max = 30;
-			@Override
-		    public void insertString(int offs, String str, AttributeSet attr)throws BadLocationException{
-		        if ((getLength() + str.length()) <= max) {
-		            super.insertString(offs, str, attr);
-		        }
-		        else {
-		            Toolkit.getDefaultToolkit().beep();
-		        }
-		    }
-		} );
-		_doc = _textForOpen.getStyledDocument();
-        _doc.addDocumentListener(new DocumentListener() {
-             public void insertUpdate(DocumentEvent e) {
-                insert();
-            }
- 
-            public void removeUpdate(DocumentEvent e) {
-                insert();
-            }
- 
-            public void changedUpdate(DocumentEvent e) {
-                insert();
-            }
- 
-            public void insert() {
-                SwingUtilities.invokeLater(new Runnable() {
-                     public void run() {
-                        Style defaultStyle = _textForOpen.getStyle(StyleContext.DEFAULT_STYLE);
-                        _doc.setCharacterAttributes(0, _doc.getLength(), defaultStyle, false);
-                    }
-                });
-            }
-        });
+		//taken from http://stackoverflow.com/questions/8666727/wrap-long-words-in-jtextpane-java-7 written by Stanislav Lapitsky
+		//to wrap long word within text pane to the next line
+		_textForOpen.setEditorKit(new WrapEditorKit());
         //---------------------------------------------------------------------------------------
+		_textForOpen.setStyledDocument(new DefaultStyledDocument()  {;
+		
+		int max = 30;
+		@Override
+	    public void insertString(int offs, String str, AttributeSet attr)throws BadLocationException{
+	        if ((getLength() + str.length()) <= max) {
+	            super.insertString(offs, str, attr);
+	        }
+	        else {
+	            Toolkit.getDefaultToolkit().beep();
+	        }
+	    }
+	} );
 		
 		_textForOpen.setPreferredSize(new Dimension(495,210));
 		_textForOpen.setBorder(loweredetched); 
 		
 		_textForClose = new JTextPane();
 		
-		//bug fix from http://java-sl.com/tip_java7_text_wrapping_bug_fix.html written by Stanislav Lapitsky
-		_textForClose.setEditorKit(new MyStyledEditorKit());
-				
+		//taken from http://stackoverflow.com/questions/8666727/wrap-long-words-in-jtextpane-java-7 written by Stanislav Lapitsky
+		//to wrap long word within text pane to the next line
+		_textForClose.setEditorKit(new WrapEditorKit());
+		//---------------------------------------------------------------------------------------			
 		_textForClose.setStyledDocument(new DefaultStyledDocument()  {;
 					
 					int max = 30;
@@ -183,30 +169,7 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 				        }
 				    }
 				} );
-				_doc = _textForClose.getStyledDocument();
-		        _doc.addDocumentListener(new DocumentListener() {
-		             public void insertUpdate(DocumentEvent e) {
-		                insert();
-		            }
-		 
-		            public void removeUpdate(DocumentEvent e) {
-		                insert();
-		            }
-		 
-		            public void changedUpdate(DocumentEvent e) {
-		                insert();
-		            }
-		 
-		            public void insert() {
-		                SwingUtilities.invokeLater(new Runnable() {
-		                     public void run() {
-		                        Style defaultStyle = _textForClose.getStyle(StyleContext.DEFAULT_STYLE);
-		                        _doc.setCharacterAttributes(0, _doc.getLength(), defaultStyle, false);
-		                    }
-		                });
-		                }
-		  });
-		  //---------------------------------------------------------------------------------------		
+		  	
 		
 		_textForClose.setPreferredSize(new Dimension(495,210));
 		_textForClose.setBorder(loweredetched); 
@@ -224,7 +187,7 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 		Font defaultFont = new Font ("Ubuntu",_textForOpen.getFont().getStyle(), _textForOpen.getFont().getSize());
 		_textForOpen.setFont(defaultFont);
 		_textForClose.setFont(defaultFont);
-		String ubuntuFont[] = {"Ubuntu", "Ubuntu Condensed", "Ubuntu Light", "Ubuntu Medium", "Ubunutu Mono"};
+		String ubuntuFont[] = {"Ubuntu", "Ubuntu Condensed", "Ubuntu Light", "Ubuntu Medium", "Ubuntu Mono"};
 		_fontDropBox = new JComboBox(ubuntuFont);
 		
 		for (int i =0; i<ubuntuFont.length; i++) {
@@ -236,6 +199,7 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 		_fontSizeLabel = new JLabel("Font Size");
 		_fontStyleLabel = new JLabel("Font Style");
 		
+		_saveTextButton = new JButton ("Save Text");
 		_okButton = new JButton("Ok");
 		_quitButton = new JButton("Quit");
 		_cancelButton = new JButton("Cancel");
@@ -249,6 +213,7 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 		fontSettingPanel.add(_fontSizeLabel);
 		fontSettingPanel.add(_fontSizeSpinner);
 		
+		confirmationPanel.add(_saveTextButton);
 		confirmationPanel.add(_okButton);
 		confirmationPanel.add(_cancelButton);
 		confirmationPanel.add(_quitButton);
@@ -258,6 +223,7 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 		_quitButton.addActionListener(this);
 		_okButton.addActionListener(this);
 		_cancelButton.addActionListener(this);
+		_saveTextButton.addActionListener(this);
 		
 		_fontSizeSpinner.addChangeListener(new ChangeListener() {
 
@@ -269,6 +235,7 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 		        	String fontName = _textForOpen.getFont().getName();
 		        	int style = _textForOpen.getFont().getStyle();
 					_textForOpen.setFont(new Font(fontName, style, (int) dataModel.getValue()));
+					_textForClose.setFont(new Font(fontName, style, (int) dataModel.getValue()));
 		        }
 			}
 			
@@ -374,6 +341,60 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 			}
 			
 		}
+		else if (e.getSource() == _saveTextButton) {
+			
+			File textConfigFile = new File("[TEXTCONFIG][test.mp4].txt");
+			if (!textConfigFile.exists()){
+				try {
+					textConfigFile.createNewFile();
+				} catch (IOException ex) {
+					// TODO Auto-generated catch block
+					ex.printStackTrace();
+				} 
+			}
+			
+			BufferedWriter bw;
+			try {
+				bw = new BufferedWriter(new FileWriter(textConfigFile, false));
+				PrintWriter pw = new PrintWriter(bw);
+				
+				//create a string builder to for making the entry string
+				StringBuilder textInformation = new StringBuilder();
+				
+				//opening scene
+				textInformation.append(_textForOpen.getText());
+				textInformation.append(System.getProperty("line.separator"));
+				
+				//closing scene
+				textInformation.append(_textForClose.getText());
+				textInformation.append(System.getProperty("line.separator"));
+				
+				//font colour
+				textInformation.append(_textForOpen.getForeground().getRGB());
+				textInformation.append(System.getProperty("line.separator"));
+				
+				//font name
+				textInformation.append(_textForOpen.getFont().getName());
+				textInformation.append(System.getProperty("line.separator"));
+				
+				//font size
+				textInformation.append(_textForOpen.getFont().getSize());
+				textInformation.append(System.getProperty("line.separator"));
+				
+				//font style
+				textInformation.append(_textForOpen.getFont().getStyle());
+				textInformation.append(System.getProperty("line.separator"));
+				
+				//append the entry to the file 
+				pw.append(textInformation.toString());
+				pw.close();
+				bw.close();
+			} catch (IOException e2) {
+				// TODO Auto-generated catch block
+				e2.printStackTrace();
+			}
+				
+		}
 		
 		
 
@@ -425,27 +446,25 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 
 }
 
-//code taken http://java-sl.com/tip_java7_text_wrapping_bug_fix.html written by Stanislav Lapitsky 
-//--------------------------------------------------------------------------------------------------
-class MyStyledEditorKit extends StyledEditorKit {
-    private MyFactory factory;
- 
+//taken from http://stackoverflow.com/questions/8666727/wrap-long-words-in-jtextpane-java-7 written by Stanislav Lapitsky
+//to wrap long word within text pane to the next line
+//---------------------------------------------------------------------------
+class WrapEditorKit extends StyledEditorKit {
+    ViewFactory defaultFactory=new WrapColumnFactory();
     public ViewFactory getViewFactory() {
-        if (factory == null) {
-            factory = new MyFactory();
-        }
-        return factory;
+        return defaultFactory;
     }
+
 }
- 
-class MyFactory implements ViewFactory {
+
+class WrapColumnFactory implements ViewFactory {
     public View create(Element elem) {
         String kind = elem.getName();
         if (kind != null) {
             if (kind.equals(AbstractDocument.ContentElementName)) {
-                return new MyLabelView(elem);
+                return new WrapLabelView(elem);
             } else if (kind.equals(AbstractDocument.ParagraphElementName)) {
-                return new MyParagraphView(elem);
+                return new ParagraphView(elem);
             } else if (kind.equals(AbstractDocument.SectionElementName)) {
                 return new BoxView(elem, View.Y_AXIS);
             } else if (kind.equals(StyleConstants.ComponentElementName)) {
@@ -454,66 +473,28 @@ class MyFactory implements ViewFactory {
                 return new IconView(elem);
             }
         }
- 
+
         // default to text display
         return new LabelView(elem);
     }
 }
- 
-class MyParagraphView extends ParagraphView {
- 
-    public MyParagraphView(Element elem) {
-        super(elem);
-    }
-    public void removeUpdate(DocumentEvent e, Shape a, ViewFactory f) {
-        super.removeUpdate(e, a, f);
-        resetBreakSpots();
-    }
-    public void insertUpdate(DocumentEvent e, Shape a, ViewFactory f) {
-        super.insertUpdate(e, a, f);
-        resetBreakSpots();
-    }
- 
-    private void resetBreakSpots() {
-        for (int i=0; i<layoutPool.getViewCount(); i++) {
-            View v=layoutPool.getView(i);
-            if (v instanceof MyLabelView) {
-                ((MyLabelView)v).resetBreakSpots();
-            }
-        }
-    }
-}
- 
-class MyLabelView extends LabelView {
- 
-    boolean isResetBreakSpots=false;
- 
-    public MyLabelView(Element elem) {
-        super(elem);
-    }
-    public View breakView(int axis, int p0, float pos, float len) {
-        if (axis == View.X_AXIS) {
-            resetBreakSpots();
-        }
-        return super.breakView(axis, p0, pos, len);
-    }
-    
-    public void resetBreakSpots() {
-        isResetBreakSpots=true;
-        removeUpdate(null, null, null);
-        isResetBreakSpots=false;
-   }
- 
-    public void removeUpdate(DocumentEvent e, Shape a, ViewFactory f) {
-        super.removeUpdate(e, a, f);
-    }
- 
-    public void preferenceChanged(View child, boolean width, boolean height) {
-        if (!isResetBreakSpots) {
-            super.preferenceChanged(child, width, height);
-        }
-    }
-}
-//---------------------------------------------------------------------------
 
+class WrapLabelView extends LabelView {
+    public WrapLabelView(Element elem) {
+        super(elem);
+    }
+
+    public float getMinimumSpan(int axis) {
+        switch (axis) {
+            case View.X_AXIS:
+                return 0;
+            case View.Y_AXIS:
+                return super.getMinimumSpan(axis);
+            default:
+                throw new IllegalArgumentException("Invalid axis: " + axis);
+        }
+    }
+
+}
+//-----------------------------------------------------------------------------
 
