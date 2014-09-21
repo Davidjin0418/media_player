@@ -129,6 +129,7 @@ public class MainFrame extends JFrame implements ActionListener {
     }
     class DownloadWorker extends SwingWorker<Void, Integer>{
         
+    	int exitStatus;
 		@Override
 		protected Void doInBackground() throws Exception {
 			/*for(int i=0;i<=100;i++){
@@ -170,6 +171,9 @@ public class MainFrame extends JFrame implements ActionListener {
 				}
 				
 				//wait for the wget command to finish if the worker is not cancelled
+				if (!isCancelled()) {
+					exitStatus = process.waitFor();
+				}
 				
 				process.getInputStream().close();
 		        process.getOutputStream().close();

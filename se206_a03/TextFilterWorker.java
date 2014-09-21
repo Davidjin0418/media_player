@@ -40,32 +40,76 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 	@Override
 	protected Integer doInBackground() throws Exception {
 		// TODO Auto-generated method stub
-		StringBuilder cmd  = new StringBuilder("avconv ");		
-		//path to input file
-		cmd. append(" -y -i " + _videoFile.getAbsolutePath() + " -vf \"drawtext=fontfile='");
-		//path to font
-		//_textFont.getFile
-		if (_textFont.getName().equals("Ubuntu")) {
-			cmd.append("/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-R.ttf':");
+		//command to get the duration
+		StringBuilder durationCmd = new StringBuilder("avconv");
+		durationCmd.append(" -i " + _videoFile.getAbsolutePath());
+		
+		ProcessBuilder dBuilder = new ProcessBuilder("/bin/bash", "-c", durationCmd.toString());
+		dBuilder.redirectErrorStream(true);
+		double timeLength = 0;
+		Process dProcess;
+		try {
+			
+			dProcess = dBuilder.start();
+
+			//getting the input stream to read the command output
+			InputStream stdout = dProcess.getInputStream();		
+			BufferedReader stdoutBuffered = new BufferedReader(new InputStreamReader(stdout));
+			String line;
+			
+			//22 character (0 -21 index)
+			Pattern durationPat = Pattern.compile("Duration:\\s(\\d\\d):(\\d\\d):(\\d\\d.\\d\\d),");
+			
+
+			// time[s]*bitrate[kbps] = size[MB]
+			while ((line = stdoutBuffered.readLine()) != null  && !isCancelled()) {
+				Matcher durationMatcher = durationPat.matcher(line);
+				if (durationMatcher.find()) {
+					double second = Double.parseDouble(durationMatcher.group(3));
+					double minute = Double.parseDouble(durationMatcher.group(2));
+					double hour = Double.parseDouble(durationMatcher.group(1));
+					
+					timeLength = (3600*hour) + (60*minute) + second;
+				}
+			}
+			
+			dProcess.getInputStream().close();
+	        dProcess.getOutputStream().close();
+	        dProcess.getErrorStream().close();
+	        dProcess.destroy();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		else if (_textFont.getName().equals("Ubuntu Light")) {
-			cmd.append("/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-L.ttf':");
+		
+		
+		
+		//command to process the video
+		StringBuilder cmd  = new StringBuilder("avconv ");		
+		//path to input file, textfilter for open scene
+		cmd. append(" -y -i " + _videoFile.getAbsolutePath() + " -vf \"drawtext=fontfile='");
+		String fontPath;
+		if (_textFont.getName().equals("Ubuntu Light")) {
+			fontPath ="/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-L.ttf':";
 		}
 		else if (_textFont.getName().equals("Ubuntu Medium")) {
-			cmd.append("/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-M.ttf':");
+			fontPath ="/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-M.ttf':";
 		}
 		else if (_textFont.getName().equals("Ubuntu Mono")) {
-			cmd.append("/usr/share/fonts/truetype/ubuntu-font-family/UbuntMono-R.ttf':");
+			fontPath ="/usr/share/fonts/truetype/ubuntu-font-family/UbuntMono-R.ttf':";
 		}
 		else if (_textFont.getName().equals("Ubuntu Condensed")) {
-			cmd.append("/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-C.ttf':");
+			fontPath ="/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-C.ttf':";
 		}	
-	
+		else {
+			fontPath ="/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-R.ttf':";
+		}
+		cmd.append(fontPath);
 		cmd.append("text='" + _openText + "':");
 		cmd.append("x=50:");
 		cmd.append("y=50:");
 		cmd.append("fontsize=" + _textFont.getSize() + ":");
-		//33914F
+
 		String red = Integer.toHexString(_textColour.getRed());
 		if (red.length() == 1) {
 			red = "0" + red;
@@ -78,16 +122,24 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 		if (blue.length() == 1) {
 			blue = "0" + blue;
 		}
-		cmd.append("fontcolor=0x" + red+green+blue + ":\"");
+		cmd.append("fontcolor=0x" + red+green+blue + ":");
 		
+		cmd.append("draw='lt(t,10)':");
 		
+		//text filter for closing scene
+		cmd.append(",drawtext=fontfile='");
+		cmd.append(fontPath);
+		cmd.append("text='" + _closeText + "':");
+		cmd.append("x=50:");
+		cmd.append("y=200:");
+		cmd.append("fontsize=" + _textFont.getSize() + ":");
+		cmd.append("fontcolor=0x" + red+green+blue + ":");
+		cmd.append("draw='gt(t," + ((int)timeLength-10) +")':\"");
 		
-		if (_videoFile.getAbsolutePath().contains(".mp4")) {
-			cmd.append(" -strict experimental ");
-		}
+		//using the same audio from the source file so don't need to re encode the audio file again.
+		cmd.append(" -c:a copy ");
 		
 		cmd.append("[TEXTFILTER]" + _videoFile.getName());
-		System.out.println(cmd.toString());
 		ProcessBuilder builder = new ProcessBuilder("/bin/bash", "-c", cmd.toString());
 		builder.redirectErrorStream(true);
 		
@@ -102,7 +154,6 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 			String line;
 			String duration = null;
 			String progress = null;
-			double timeLength = 0;
 			double bitrate = 0;
 			double currentSize = 0;
 			//22 character (0 -21 index)
@@ -112,14 +163,6 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 
 			// time[s]*bitrate[kbps] = size[MB]
 			while ((line = stdoutBuffered.readLine()) != null  && !isCancelled()) {
-				Matcher durationMatcher = durationPat.matcher(line);
-				if (durationMatcher.find()) {
-					double second = Double.parseDouble(durationMatcher.group(3));
-					double minute = Double.parseDouble(durationMatcher.group(2));
-					double hour = Double.parseDouble(durationMatcher.group(1));
-					
-					timeLength = (3600*hour) + (60*minute) + second;
-				}
 				
 				Matcher progressMatcher = progressPat.matcher(line);
 				if (progressMatcher.find()) {
