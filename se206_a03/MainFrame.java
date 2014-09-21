@@ -110,7 +110,14 @@ public class MainFrame extends JFrame implements ActionListener {
         if (arg0.getSource() == btnAddText) {
             //create a text window.
         	if (Main.file !=null ) {
-             TextFrame textframe = new TextFrame();
+        		if (fileType.equals("video")) {
+        			TextFrame textframe = new TextFrame();
+        		}
+        		else {
+        			JOptionPane.showMessageDialog(this,
+                            "ERROR: " + Main.file.getName()
+                            + " is an audio file, can't apply text onto it");
+        		}
         	}
         } else if (arg0.getSource() == btnChooseAFile) {
             try {
