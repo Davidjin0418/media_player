@@ -42,6 +42,8 @@ public class MainFrame extends JFrame implements ActionListener {
     private JButton btnAddText;
     private JProgressBar progressBar;
     
+    private String fileType = "none";
+    
     /**
      * Create the frame.
      * @throws IOException 
@@ -220,15 +222,23 @@ public class MainFrame extends JFrame implements ActionListener {
             BufferedReader stdout = new BufferedReader(new InputStreamReader(
                                                                              process.getInputStream()));
             String out = stdout.readLine();
+            
+            //used java regex to see if the output from file command contain video or audio
+            //then store it into a  variable to use it.
+            Pattern fileTypePattern = Pattern.compile(Main.file.getAbsolutePath()+": (audio|video)/.*");
+            Matcher patternMatcher = fileTypePattern.matcher(out);
+            if (patternMatcher.find()) {
+            	fileType = patternMatcher.group(1);
+            }
             //System.out.println(out);
             //System.out.println(Main.file.getPath() + ": audio/mpeg");
-            if (out.equals(Main.file.getPath() + ": audio/mpeg") || out.equals(Main.file.getPath() + ": video/mp4")) {
+            if ( fileType.equals("audio") | fileType.equals("video")) {
                 currentFIle
                 .setText(Main.file.getCanonicalPath() + " is chosen");
             } else {
                 JOptionPane.showMessageDialog(this,
                                               "ERROR:" + Main.file.getName()
-                                              + " does not refer to a valid audio file");
+                                              + " does not refer to a valid audio/video file");
                 Main.file = null;
                 chooseFile();
             }

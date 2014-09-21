@@ -335,7 +335,7 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 			}
 		}
 		else if (e.getSource() == _okButton) {
-			File file = new File("/home/john/workspace/vlc/test.mp4");
+			File file = new File(Main.file.getAbsolutePath());
 			TextFilterWorker worker = new TextFilterWorker(file, _TextProgressBar, _textForOpen, _textForClose, _okButton);
 			_currentTextWorker = worker;
 			worker.execute();
@@ -349,7 +349,7 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 		}
 		else if (e.getSource() == _saveTextButton) {
 			
-			File textConfigFile = new File("[TEXTCONFIG][test.mp4].txt");
+			File textConfigFile = new File("[TEXTCONFIG]["+ Main.file.getName()+"].txt");
 			if (!textConfigFile.exists()){
 				try {
 					textConfigFile.createNewFile();
