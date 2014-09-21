@@ -166,7 +166,6 @@ public class MainFrame extends JFrame implements ActionListener {
 						//checking where the download is on the table and publish the % 
 						publish(Integer.parseInt(mat.group(1)));
 					}			
-					System.out.println(line);
 					
 				}
 				
@@ -220,7 +219,7 @@ public class MainFrame extends JFrame implements ActionListener {
             String out = stdout.readLine();
             System.out.println(out);
             System.out.println(Main.file.getPath() + ": audio/mpeg");
-            if (out.equals(Main.file.getPath() + ": audio/mpeg")) {
+            if (out.equals(Main.file.getPath() + ": audio/mpeg") || out.equals(Main.file.getPath() + ": video/mp4")) {
                 currentFIle
                 .setText(Main.file.getCanonicalPath() + " is chosen");
             } else {
