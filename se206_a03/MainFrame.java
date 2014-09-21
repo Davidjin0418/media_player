@@ -107,7 +107,9 @@ public class MainFrame extends JFrame implements ActionListener {
     public void actionPerformed(ActionEvent arg0) {
         if (arg0.getSource() == btnAddText) {
             //create a text window.
-            TextFrame textframe = new TextFrame();
+        	if (Main.file !=null ) {
+             TextFrame textframe = new TextFrame();
+        	}
         } else if (arg0.getSource() == btnChooseAFile) {
             try {
                 chooseFile();
@@ -117,8 +119,9 @@ public class MainFrame extends JFrame implements ActionListener {
             }
         } else if (arg0.getSource() == btnPlay) {
             //create a play frame window.
-            PlayFrame playframe=new PlayFrame();
-            
+        	if (Main.file !=null ) {
+        		PlayFrame playframe=new PlayFrame();
+        	}
         } else if (arg0.getSource() == btnStartDownload) {
             progressBar.setMinimum(0);
             progressBar.setMaximum(100);
@@ -217,8 +220,8 @@ public class MainFrame extends JFrame implements ActionListener {
             BufferedReader stdout = new BufferedReader(new InputStreamReader(
                                                                              process.getInputStream()));
             String out = stdout.readLine();
-            System.out.println(out);
-            System.out.println(Main.file.getPath() + ": audio/mpeg");
+            //System.out.println(out);
+            //System.out.println(Main.file.getPath() + ": audio/mpeg");
             if (out.equals(Main.file.getPath() + ": audio/mpeg") || out.equals(Main.file.getPath() + ": video/mp4")) {
                 currentFIle
                 .setText(Main.file.getCanonicalPath() + " is chosen");

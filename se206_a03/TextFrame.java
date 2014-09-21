@@ -15,8 +15,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -71,7 +74,6 @@ import javax.swing.text.ViewFactory;
 public class TextFrame extends JFrame implements ActionListener, WindowListener {
 	
 	
-	
 	private JTextPane _textForOpen;
 	private JTextPane _textForClose;
 	
@@ -103,7 +105,7 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 		
 	};
 
-	public static void main(String[] args) {
+	/*public static void main(String[] args) {
 
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
@@ -115,10 +117,12 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 			
 		});;
 
-	}
+	}*/
 	
 	private void createAndShowGui() {
 		// TODO Auto-generated method stub
+
+		
 		Border loweredetched = BorderFactory.createEtchedBorder(EtchedBorder.LOWERED);
 		JPanel fontSettingPanel = new JPanel();
 		fontSettingPanel.setLayout(new FlowLayout(FlowLayout.TRAILING));
@@ -287,7 +291,9 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 		
 		setTitle("Text Editing");
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-		//create a tab panel to hold other panel
+		
+		checkTextSetting();
+		
 		
 		this.addWindowListener(this);
 		this.setSize(1280,720);
@@ -443,6 +449,56 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 	@Override
 	public void windowDeactivated(WindowEvent e) {}
 
+	private void checkTextSetting (){
+		File settingFile = new File("[TEXTCONFIG]["+ Main.file.getName() +"].txt");
+		if (settingFile.exists()) {
+			try {
+				
+				//create a bufferedreader to read the log file
+				BufferedReader br = new BufferedReader(new FileReader(settingFile));
+				String line;
+				int lineCount = 1;
+				String fontName = "Ubuntu";
+				int fontSize = 12;
+				int fontStyle = 0;
+				//read and publish each line until it reach to end of file
+				//and setting isEmpty 
+				while ((line = br.readLine()) != null) {
+					switch (lineCount) {
+					case 1: _textForOpen.setText(line);
+							break;
+					case 2: _textForClose.setText(line);
+							break;
+					case 3: _textForOpen.setForeground(new Color(Integer.parseInt(line)));
+							_textForClose.setForeground(new Color(Integer.parseInt(line)));
+							break;
+					case 4: fontName = line;
+							for ( int i =0; i<_fontDropBox.getSelectedObjects().length; i++ ) {
+								_fontDropBox.setSelectedItem(line);
+							}
+							break;
+					case 5: fontSize = Integer.parseInt(line);
+							_fontSizeSpinner.setValue(fontSize);
+							break;
+					case 6: fontStyle = Integer.parseInt(line);
+							
+							break;
+					}
+					lineCount++;
+				}
+				_textForOpen.setFont(new Font(fontName,fontStyle, fontSize));
+				_textForClose.setFont(new Font(fontName,fontStyle, fontSize));
+				br.close();
+				
+			} catch (FileNotFoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}
+	}
 
 }
 
