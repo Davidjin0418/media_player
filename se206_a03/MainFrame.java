@@ -22,8 +22,11 @@ import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.JProgressBar;
 import javax.swing.SwingConstants;
@@ -38,6 +41,8 @@ public class MainFrame extends JFrame implements ActionListener {
     private JButton btnPlay;
     private JButton btnAddText;
     private JProgressBar progressBar;
+    
+    private String fileType = "none";
     
     /**
      * Create the frame.
@@ -104,7 +109,16 @@ public class MainFrame extends JFrame implements ActionListener {
     public void actionPerformed(ActionEvent arg0) {
         if (arg0.getSource() == btnAddText) {
             //create a text window.
-            TextFrame textframe = new TextFrame();
+        	if (Main.file !=null ) {
+        		if (fileType.equals("video")) {
+        			TextFrame textframe = new TextFrame();
+        		}
+        		else {
+        			JOptionPane.showMessageDialog(this,
+                            "ERROR: " + Main.file.getName()
+                            + " is an audio file, can't apply text onto it");
+        		}
+        	}
         } else if (arg0.getSource() == btnChooseAFile) {
             try {
                 chooseFile();
@@ -114,8 +128,9 @@ public class MainFrame extends JFrame implements ActionListener {
             }
         } else if (arg0.getSource() == btnPlay) {
             //create a play frame window.
-            PlayFrame playframe=new PlayFrame();
-            
+        	if (Main.file !=null ) {
+        		PlayFrame playframe=new PlayFrame();
+        	}
         } else if (arg0.getSource() == btnStartDownload) {
             progressBar.setMinimum(0);
             progressBar.setMaximum(100);
@@ -126,9 +141,10 @@ public class MainFrame extends JFrame implements ActionListener {
     }
     class DownloadWorker extends SwingWorker<Void, Integer>{
         
+    	int exitStatus;
 		@Override
 		protected Void doInBackground() throws Exception {
-			for(int i=0;i<=100;i++){
+			/*for(int i=0;i<=100;i++){
 				publish(i);
 				String url = downloadURL.getText();
 				String cmd = "wget " + url;
@@ -136,6 +152,47 @@ public class MainFrame extends JFrame implements ActionListener {
 				pb.redirectErrorStream(true);
 				pb.start();
 				
+			}*/
+			String url = downloadURL.getText();
+			String cmd = "wget " + url;
+			ProcessBuilder pb = new ProcessBuilder("bash", "-c", cmd);
+			
+			pb.redirectErrorStream(true);
+			
+			Process process;
+			try {
+				//start the wget command
+				process = pb.start();
+				
+				//getting the input stream to read the command output
+				InputStream stdout = process.getInputStream();		
+				BufferedReader stdoutBuffered = new BufferedReader(new InputStreamReader(stdout));
+				String line;
+				
+				//reading each line of the command's output
+				while ((line = stdoutBuffered.readLine()) != null  && !isCancelled()) {
+					//parsing each line to find the % completion of the mp3 file
+					Pattern patt = Pattern.compile("(\\d{1,3})%");
+					Matcher mat = patt.matcher(line);
+					if (mat.find()){
+						//checking where the download is on the table and publish the % 
+						publish(Integer.parseInt(mat.group(1)));
+					}			
+					
+				}
+				
+				//wait for the wget command to finish if the worker is not cancelled
+				if (!isCancelled()) {
+					exitStatus = process.waitFor();
+				}
+				
+				process.getInputStream().close();
+		        process.getOutputStream().close();
+		        process.getErrorStream().close();
+		        process.destroy();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 			return null;
 		}
@@ -172,15 +229,23 @@ public class MainFrame extends JFrame implements ActionListener {
             BufferedReader stdout = new BufferedReader(new InputStreamReader(
                                                                              process.getInputStream()));
             String out = stdout.readLine();
-            System.out.println(out);
-            System.out.println(Main.file.getPath() + ": audio/mpeg");
-            if (out.equals(Main.file.getPath() + ": audio/mpeg")) {
+            
+            //used java regex to see if the output from file command contain video or audio
+            //then store it into a  variable to use it.
+            Pattern fileTypePattern = Pattern.compile(Main.file.getAbsolutePath()+": (audio|video)/.*");
+            Matcher patternMatcher = fileTypePattern.matcher(out);
+            if (patternMatcher.find()) {
+            	fileType = patternMatcher.group(1);
+            }
+            //System.out.println(out);
+            //System.out.println(Main.file.getPath() + ": audio/mpeg");
+            if ( fileType.equals("audio") | fileType.equals("video")) {
                 currentFIle
                 .setText(Main.file.getCanonicalPath() + " is chosen");
             } else {
                 JOptionPane.showMessageDialog(this,
                                               "ERROR:" + Main.file.getName()
-                                              + " does not refer to a valid audio file");
+                                              + " does not refer to a valid audio/video file");
                 Main.file = null;
                 chooseFile();
             }
