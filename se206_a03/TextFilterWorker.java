@@ -170,7 +170,7 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 					currentSize = Double.parseDouble(progressMatcher.group(1)) / 1024;
 					bitrate = Double.parseDouble(progressMatcher.group(2));
 					double finalSize = timeLength*bitrate /(8*1024);
-					double percentage = (currentSize/finalSize)*10000;
+					double percentage = (currentSize/finalSize)*100;
 					publish((int)percentage);
 					
 				}
@@ -200,7 +200,8 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 	public void done() {
 		if (!isCancelled()) {
 			if (_exitStatus == 0) {
-				_bar.setValue(10000);
+				_bar.setValue(100);
+				_bar.setString("Done");
 			}
 			else {
 				//need indicate to the user. 
@@ -208,6 +209,7 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 		}
 		else {
 			_bar.setValue(0);
+			_bar.setString("Cancelled");
 		}
 		_button.setEnabled(true);
 		
@@ -216,6 +218,7 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 	public void process(List<Integer> n) {
 		for (Integer currentPercentage : n) {
 			_bar.setValue(currentPercentage);
+			_bar.setString(currentPercentage + "%");
 		}
 	}
 

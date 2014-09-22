@@ -39,6 +39,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTextArea;
 import javax.swing.JTextPane;
@@ -77,6 +78,8 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 	private JTextPane _textForOpen;
 	private JTextPane _textForClose;
 	
+	private JScrollPane _scrollForOpen;
+	private JScrollPane _scrollForClose;
 	private JLabel _openLabel;
 	private JLabel _closeLabel;
 	
@@ -93,12 +96,14 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 	private JButton _quitButton;
 	private JButton _cancelButton;
 	private JButton _saveTextButton;
+	private JButton _previewButton;
 	
 	private StyledDocument _doc;
 	
 	private JProgressBar _TextProgressBar;
 	
 	private TextFilterWorker _currentTextWorker = null;
+	private PreviewWorker _currentPreviewWorker = null;
 	
 	public TextFrame() {
 		createAndShowGui();
@@ -152,7 +157,7 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 	} );
 		
 		_textForOpen.setPreferredSize(new Dimension(495,210));
-		_textForOpen.setBorder(loweredetched); 
+		_scrollForOpen = new JScrollPane(_textForOpen);
 		
 		_textForClose = new JTextPane();
 		
@@ -175,11 +180,11 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 				} );
 		  	
 		
-		_textForClose.setPreferredSize(new Dimension(495,210));
-		_textForClose.setBorder(loweredetched); 
+		_textForClose.setPreferredSize(new Dimension(495,210)); 
+		_scrollForClose = new JScrollPane(_textForClose);
 		
-		
-		_TextProgressBar = new JProgressBar(0, 10000);
+		_TextProgressBar = new JProgressBar(0, 100);
+		_TextProgressBar.setStringPainted(true);
 		
 		_openLabel = new JLabel("Enter text below for opening scene");
 		_closeLabel = new JLabel("Enter text below for closing scene");
@@ -207,7 +212,7 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 		_okButton = new JButton("Ok");
 		_quitButton = new JButton("Quit");
 		_cancelButton = new JButton("Cancel");
-		
+		_previewButton = new JButton("Preview");
 		
 		
 		fontSettingPanel.add(_fontStyleLabel);
@@ -217,6 +222,7 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 		fontSettingPanel.add(_fontSizeLabel);
 		fontSettingPanel.add(_fontSizeSpinner);
 		
+		confirmationPanel.add(_previewButton);
 		confirmationPanel.add(_saveTextButton);
 		confirmationPanel.add(_okButton);
 		confirmationPanel.add(_cancelButton);
@@ -228,6 +234,7 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 		_okButton.addActionListener(this);
 		_cancelButton.addActionListener(this);
 		_saveTextButton.addActionListener(this);
+		_previewButton.addActionListener(this);
 		
 		_fontSizeSpinner.addChangeListener(new ChangeListener() {
 
@@ -264,9 +271,9 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 		layout.setHorizontalGroup(layout.createSequentialGroup()
 				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
 				      .addComponent(_openLabel)
-				      .addComponent(_textForOpen, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,GroupLayout.PREFERRED_SIZE)
+				      .addComponent(_scrollForOpen, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,GroupLayout.PREFERRED_SIZE)
 				      .addComponent(_closeLabel)
-				      .addComponent(_textForClose, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,GroupLayout.PREFERRED_SIZE)
+				      .addComponent(_scrollForClose, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,GroupLayout.PREFERRED_SIZE)
 				      .addComponent(fontSettingPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,GroupLayout.PREFERRED_SIZE)
 				      .addComponent(confirmationPanel))
 		);
@@ -274,9 +281,9 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 		layout.setVerticalGroup(
 				   layout.createSequentialGroup()
 				           .addComponent(_openLabel)
-				           .addComponent(_textForOpen, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,GroupLayout.PREFERRED_SIZE)
+				           .addComponent(_scrollForOpen, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,GroupLayout.PREFERRED_SIZE)
 				           .addComponent(_closeLabel)
-				           .addComponent(_textForClose, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,GroupLayout.PREFERRED_SIZE)
+				           .addComponent(_scrollForClose, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,GroupLayout.PREFERRED_SIZE)
 				           .addComponent(fontSettingPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,GroupLayout.PREFERRED_SIZE)
 				           .addComponent(confirmationPanel)
 				);
@@ -296,10 +303,10 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 		
 		
 		this.addWindowListener(this);
-		this.setSize(1280,720);
+		this.setSize(1280,800);
 		this.setResizable(false);
 		this.setLocationRelativeTo(null);
-		//this.pack();
+		this.pack();
 		this.setVisible(true);
 	}
 
@@ -345,6 +352,12 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 			if (_currentTextWorker != null) {
 				_currentTextWorker.cancel(true);
 			}
+			
+		}
+		else if (e.getSource() == _previewButton) {
+			PreviewWorker worker = new PreviewWorker(new File(Main.file.getAbsolutePath()), _textForOpen, _textForClose, _previewButton); 
+			worker.execute();
+			_previewButton.setEnabled(false);
 			
 		}
 		else if (e.getSource() == _saveTextButton) {

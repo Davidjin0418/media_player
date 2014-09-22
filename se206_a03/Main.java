@@ -19,7 +19,7 @@ public class Main {
 				}
 	           }
 	       });
-	    }
+	    } 
 		public static void createGUI() throws IOException{
 			MainFrame mainFrame=new MainFrame();
 			mainFrame.setTitle("Welcome to VAMIX");
