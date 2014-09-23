@@ -42,8 +42,6 @@ public class MainFrame extends JFrame implements ActionListener {
     private JButton btnAddText;
     private JProgressBar progressBar;
     
-    private String fileType = "none";
-    
     /**
      * Create the frame.
      * @throws IOException 
@@ -110,7 +108,7 @@ public class MainFrame extends JFrame implements ActionListener {
         if (arg0.getSource() == btnAddText) {
             //create a text window.
         	if (Main.file !=null ) {
-        		if (fileType.equals("video")) {
+        		if (isAudioVideoFile(Main.file).equals("video")) {
         			TextFrame textframe = new TextFrame();
         		}
         		else {
@@ -221,35 +219,58 @@ public class MainFrame extends JFrame implements ActionListener {
         fc.setAcceptAllFileFilterUsed(false);
         int returnVal = fc.showOpenDialog(MainFrame.this);
         if (returnVal == JFileChooser.APPROVE_OPTION) {
-            Main.file = fc.getSelectedFile();
-            String s = "file --mime-type " + Main.file.getPath();
-            ProcessBuilder pb = new ProcessBuilder("bash", "-c", s);
-            pb.redirectErrorStream(true);
-            Process process = pb.start();
-            BufferedReader stdout = new BufferedReader(new InputStreamReader(
-                                                                             process.getInputStream()));
-            String out = stdout.readLine();
-            
-            //used java regex to see if the output from file command contain video or audio
-            //then store it into a  variable to use it.
-            Pattern fileTypePattern = Pattern.compile(Main.file.getAbsolutePath()+": (audio|video)/.*");
-            Matcher patternMatcher = fileTypePattern.matcher(out);
-            if (patternMatcher.find()) {
-            	fileType = patternMatcher.group(1);
-            }
-            //System.out.println(out);
-            //System.out.println(Main.file.getPath() + ": audio/mpeg");
-            if ( fileType.equals("audio") | fileType.equals("video")) {
-                currentFIle
-                .setText(Main.file.getCanonicalPath() + " is chosen");
+            File file = fc.getSelectedFile();
+           
+            if ( isAudioVideoFile(file).equals("audio") | isAudioVideoFile(file).equals("video") ) {
+            	Main.file = file;
+                currentFIle.setText(Main.file.getCanonicalPath() + " is chosen");
             } else {
                 JOptionPane.showMessageDialog(this,
-                                              "ERROR:" + Main.file.getName()
+                                              "ERROR:" + file.getName()
                                               + " does not refer to a valid audio/video file");
-                Main.file = null;
                 chooseFile();
             }
         }
+    }
+    
+    
+    /**
+     * Checking if the file is audio or video file
+     * @param File file
+     * @return a string indicating what type of file it is. 
+     * It will return "audio" if it's audio file, return "video" if it's video file. 
+     * Return "error" if there is an error trying to identify the file type 
+     * Return null if the file is other file type
+     */
+    public static String isAudioVideoFile(File file) {
+        String s = "file --mime-type " + file.getPath();
+        ProcessBuilder pb = new ProcessBuilder("bash", "-c", s);
+        pb.redirectErrorStream(true);
+        Process process;
+		try {
+			process = pb.start();
+			BufferedReader stdout = new BufferedReader(new InputStreamReader(process.getInputStream()));
+	        String out = stdout.readLine();
+	      	//used java regex to see if the output from file command contain video or audio
+	        //then store it into a  variable to use it.
+	        Pattern fileTypePattern = Pattern.compile(file.getAbsolutePath()+": (audio|video)/.*");
+	        Matcher patternMatcher = fileTypePattern.matcher(out);
+	        if (patternMatcher.find()) {
+	        	return patternMatcher.group(1);
+	        }
+	        
+	        if (process.waitFor() != 0) {
+	        	return "error";
+	        }
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        
+		return null;
     }
 }
 
