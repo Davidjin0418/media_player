@@ -31,6 +31,7 @@ import java.util.regex.Pattern;
 import javax.swing.JProgressBar;
 import javax.swing.SwingConstants;
 
+
 public class MainFrame extends JFrame implements ActionListener {
     
     private JPanel mainPane;
@@ -99,9 +100,11 @@ public class MainFrame extends JFrame implements ActionListener {
         mainPane.add(btnAddText);
         
         progressBar = new JProgressBar();
-        progressBar.setBounds(155, 60, 146, 20);
+        //original width 146
+        progressBar.setBounds(155, 60, 170, 20);
         progressBar.setMinimum(0);
         progressBar.setMaximum(100);
+        progressBar.setStringPainted(true);
         mainPane.add(progressBar);
         
         JLabel lblDownloadProgress = new JLabel("Download Progress:");
@@ -141,6 +144,11 @@ public class MainFrame extends JFrame implements ActionListener {
 	            if (downloadURL.getText().equals("")) {
 	            	JOptionPane.showMessageDialog(this,"ERROR: The url is empty, please enter an url to download");
 	            }
+	            
+	            //Retrieve the url from the text field and cut out the end of it
+				String url = downloadURL.getText();
+				String fileName = url.substring(url.lastIndexOf('/')+1);
+	            if (checkFileExist(fileName) && !isOverWrite(fileName)) return;
 	            DownloadWorker worker=new DownloadWorker();
 	            isDownloading = true;
 	            btnStartDownload.setText("Cancel Download");
@@ -158,14 +166,15 @@ public class MainFrame extends JFrame implements ActionListener {
         
     }
     class DownloadWorker extends SwingWorker<Void, Integer>{
-        
+        String fileName;
     	int exitStatus;
 		@Override
 		protected Void doInBackground() throws Exception {
 			String url = downloadURL.getText();
-			String cmd = "wget " + "\"" + url + "\"";
-			ProcessBuilder pb = new ProcessBuilder("bash", "-c", cmd);
-			
+			fileName = url.substring(url.lastIndexOf('/')+1);
+			//String cmd = "wget " + "\"" + url + "\" -O ./" + fileName;
+			ProcessBuilder pb = new ProcessBuilder("wget", url, "-O", fileName);
+
 			pb.redirectErrorStream(true);
 			
 			Process process;
@@ -187,7 +196,6 @@ public class MainFrame extends JFrame implements ActionListener {
 						//checking where the download is on the table and publish the % 
 						publish(Integer.parseInt(mat.group(1)));
 					}			
-					
 				}
 				
 				//wait for the wget command to finish if the worker is not cancelled
@@ -207,16 +215,70 @@ public class MainFrame extends JFrame implements ActionListener {
 		}
 		 protected void process(List<Integer> chunks) {
 			if (!isCancelled())	 {
-	    	 for (int i : chunks)
+	    	 for (int i : chunks) {
+	    		 String progress = Integer.toString(i);
 	    		 progressBar.setValue(i);
+	    	 	 progressBar.setString(progress + "%");
+	    	 }
 			}
 	     }
 		 protected void done(){
 			 if (!isCancelled()) {
-				 String fileName = downloadURL.getText().substring(
+				 /*String fileName = downloadURL.getText().substring(
 							downloadURL.getText().lastIndexOf('/') + 1,
 							downloadURL.getText().length());
-				 currentFIle.setText(fileName+" has been downloaded");
+				 currentFIle.setText(fileName+" has been downloaded");*/
+				 boolean removeFile = true;
+				 progressBar.setString("Error");
+					switch (exitStatus){
+					
+					case 0: progressBar.setString("Download Completed");
+							removeFile = false;
+							break;
+					case 1: JOptionPane.showMessageDialog(MainFrame.this, "Download Error: Generic error code");
+							break;
+					case 2: JOptionPane.showMessageDialog(MainFrame.this, "Download Error: Parse Error");
+							break;
+					case 3: JOptionPane.showMessageDialog(MainFrame.this, "Download Error: File I/O error");
+							break;
+					case 4:JOptionPane.showMessageDialog(MainFrame.this, "Download Error: Network Failure");
+							break;
+					case 5: JOptionPane.showMessageDialog(MainFrame.this, "Download Error: SSL Vertification Faiure");
+							break;
+					case 6: JOptionPane.showMessageDialog(MainFrame.this, "Download Error: Username/Password authentications Failure");
+							break;
+					case 7: JOptionPane.showMessageDialog(MainFrame.this, "Download Error: Protocol error");
+							break;
+					case 8: JOptionPane.showMessageDialog(MainFrame.this, "Download Error: Server issued error response");
+							break;
+					}
+					
+					if (removeFile == true) {
+						StringBuilder cmd = new StringBuilder();
+						
+						cmd.append("rm " + "\"" + fileName + "\"" );
+						
+						ProcessBuilder builder = new ProcessBuilder("/bin/bash", "-c", cmd.toString());
+						
+						Process process;
+						try {
+							process = builder.start();
+							
+							//1 mean false, the file doesn't exist
+							process.waitFor();
+							process.getInputStream().close();
+					        process.getOutputStream().close();
+					        process.getErrorStream().close();
+					        process.destroy();
+						} catch (IOException | InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				 
+			 }
+			 else {
+				 progressBar.setString("Download Cancelled");
 			 }
 
 			 btnStartDownload.setText("Start Download");
@@ -289,5 +351,53 @@ public class MainFrame extends JFrame implements ActionListener {
         
 		return "other";
     }
+    
+    private boolean isOverWrite(String fileName) {
+		
+		int overWrite = JOptionPane.showConfirmDialog (
+				this,
+				fileName + " already exists. Do you want to overwrite the current file ?",
+				"Message",
+				 JOptionPane.YES_NO_OPTION);
+		
+		return (overWrite == 0);
+	}
+    
+    private boolean checkFileExist(String fileName) {
+		StringBuilder cmd = new StringBuilder();
+		
+		cmd.append("test -e ");
+		cmd.append("\"");
+		cmd.append(fileName);
+		cmd.append("\"");
+		
+		ProcessBuilder builder = new ProcessBuilder("/bin/bash", "-c", cmd.toString());
+		
+		Process process;
+		try {
+			process = builder.start();
+			
+			//1 mean false, the file doesn't exist
+			int exitStatus = process.waitFor();
+			process.waitFor();
+			process.getInputStream().close();
+	        process.getOutputStream().close();
+	        process.getErrorStream().close();
+	        process.destroy();
+			if (exitStatus == 1) {
+				return false;
+			}
+			else  {
+				return true; 
+			}
+		} catch (IOException | InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return false;
+		
+		
+	}
 }
 
