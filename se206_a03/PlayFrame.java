@@ -126,7 +126,7 @@ public class PlayFrame extends JFrame implements ActionListener {
     		return false;
     	}
     }
-    public boolean 
+    
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == btnPlay) {

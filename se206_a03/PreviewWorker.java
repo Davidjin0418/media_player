@@ -7,7 +7,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,38 +15,34 @@ import javax.swing.JProgressBar;
 import javax.swing.JTextPane;
 import javax.swing.SwingWorker;
 
-public class TextFilterWorker extends SwingWorker<Integer, Integer> {
+public class PreviewWorker extends SwingWorker<Integer,Integer> {
 	
 	File _videoFile;
-	JProgressBar _bar;
 	Font _openTextFont;
 	Color _openTextColour;
 	
 	Font _closeTextFont;
 	Color _closeTextColour;
-	
 	String _openText;
 	String _closeText;
 	JButton _button;
 	int _exitStatus;
 	
-	public TextFilterWorker(File file , JProgressBar progress, JTextPane _textForOpen, JTextPane _textForClose, JButton _okButton) {
+	public PreviewWorker(File file , JTextPane _textForOpen, JTextPane _textForClose, JButton _previewButton) {
 		_videoFile = file;
-		_bar = progress;
 		_openTextFont = _textForOpen.getFont();
 		_openTextColour = _textForOpen.getForeground();
-		_openText= _textForOpen.getText();
 		
 		_closeTextFont = _textForClose.getFont();
 		_closeTextColour = _textForClose.getForeground();
+		_openText= _textForOpen.getText();
 		_closeText = _textForClose.getText();
-		_button = _okButton;
+		_button = _previewButton;
 	}
-
+	
 	@Override
 	protected Integer doInBackground() throws Exception {
 		// TODO Auto-generated method stub
-		//command to get the duration
 		StringBuilder durationCmd = new StringBuilder("avconv");
 		durationCmd.append(" -i " + _videoFile.getAbsolutePath());
 		
@@ -92,9 +87,9 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 		
 		
 		//command to process the video
-		StringBuilder cmd  = new StringBuilder("avconv ");		
+		StringBuilder cmd  = new StringBuilder("avplay ");		
 		//path to input file, textfilter for open scene
-		cmd. append(" -y -i " + _videoFile.getAbsolutePath() + " -vf \"drawtext=fontfile='");
+		cmd. append("-vf \"drawtext=fontfile='");
 		String fontPath;
 		if (_openTextFont.getName().equals("Ubuntu Light")) {
 			fontPath ="/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-L.ttf':";
@@ -173,9 +168,9 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 		cmd.append("draw='gt(t," + ((int)timeLength-10) +")':\"");
 		
 		//using the same audio from the source file so don't need to re encode the audio file again.
-		cmd.append(" -c:a copy ");
-		
-		cmd.append("[TEXTFILTER]" + _videoFile.getName());
+		//cmd.append(" -c:a copy ");
+		cmd.append(" -i \"" + _videoFile.getAbsolutePath() + "\"");
+		System.out.println(cmd.toString());
 		ProcessBuilder builder = new ProcessBuilder("/bin/bash", "-c", cmd.toString());
 		builder.redirectErrorStream(true);
 		
@@ -188,32 +183,8 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 			InputStream stdout = process.getInputStream();		
 			BufferedReader stdoutBuffered = new BufferedReader(new InputStreamReader(stdout));
 			String line;
-			String duration = null;
-			String progress = null;
-			double bitrate = 0;
-			double currentSize = 0;
-			//22 character (0 -21 index)
-			Pattern durationPat = Pattern.compile("Duration:\\s(\\d\\d):(\\d\\d):(\\d\\d.\\d\\d),");
-			Pattern progressPat = Pattern.compile("L?size=\\s*(\\d*)kB\\stime=\\d*.\\d*\\sbitrate=\\s(\\d*.\\d)kbits/s");
-			
-
-			// time[s]*bitrate[kbps] = size[MB]
 			while ((line = stdoutBuffered.readLine()) != null  && !isCancelled()) {
-				
-				Matcher progressMatcher = progressPat.matcher(line);
-				if (progressMatcher.find()) {
-					progress = progressMatcher.group(0);
-					currentSize = Double.parseDouble(progressMatcher.group(1)) / 1024;
-					bitrate = Double.parseDouble(progressMatcher.group(2));
-					double finalSize = timeLength*bitrate /(8*1024);
-					double percentage = (currentSize/finalSize)*100;
-					publish((int)percentage);
-					
-				}
-				
-				
-				
-				//System.out.println(line);
+				System.out.println(line);
 			}
 			
 			
@@ -229,33 +200,11 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
 		return null;
 	}
 	
 	public void done() {
-		if (!isCancelled()) {
-			if (_exitStatus == 0) {
-				_bar.setValue(100);
-				_bar.setString("Done");
-			}
-			else {
-				//need indicate to the user. 
-			}	
-		}
-		else {
-			_bar.setValue(0);
-			_bar.setString("Cancelled");
-		}
 		_button.setEnabled(true);
-		
-	}
-	
-	public void process(List<Integer> n) {
-		for (Integer currentPercentage : n) {
-			_bar.setValue(currentPercentage);
-			_bar.setString(currentPercentage + "%");
-		}
 	}
 
 }

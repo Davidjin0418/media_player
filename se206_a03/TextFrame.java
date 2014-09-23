@@ -83,14 +83,20 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 	private JLabel _openLabel;
 	private JLabel _closeLabel;
 	
-	private JComboBox _fontDropBox;
+	private JComboBox _openFontDropBox;
+	private JSpinner _openFontSizeSpinner;
+	private JButton _openColourButton;
 	
-	private JSpinner _fontSizeSpinner;
+	private JComboBox _closeFontDropBox;
+	private JSpinner _closeFontSizeSpinner;
+	private JButton _closeColourButton;	
 	
-	private JButton _colourButton;
 	
-	private JLabel _fontStyleLabel;
-	private JLabel _fontSizeLabel;
+	private JLabel _openfontStyleLabel;
+	private JLabel _openfontSizeLabel;
+	
+	private JLabel _closefontStyleLabel;
+	private JLabel _closefontSizeLabel;
 	
 	private JButton _okButton;
 	private JButton _quitButton;
@@ -107,30 +113,18 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 	
 	public TextFrame() {
 		createAndShowGui();
-		
 	};
-
-	/*public static void main(String[] args) {
-
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				TextFrame textWindow = new TextFrame();
-
-			}
-
-			
-		});;
-
-	}*/
 	
 	private void createAndShowGui() {
 		// TODO Auto-generated method stub
 
 		
 		Border loweredetched = BorderFactory.createEtchedBorder(EtchedBorder.LOWERED);
-		JPanel fontSettingPanel = new JPanel();
-		fontSettingPanel.setLayout(new FlowLayout(FlowLayout.TRAILING));
+		JPanel openfontSettingPanel = new JPanel();
+		openfontSettingPanel.setLayout(new FlowLayout(FlowLayout.TRAILING));
+		
+		JPanel closefontSettingPanel = new JPanel();
+		closefontSettingPanel.setLayout(new FlowLayout(FlowLayout.TRAILING));
 		
 		JPanel confirmationPanel = new JPanel();
 		confirmationPanel.setLayout(new FlowLayout(FlowLayout.TRAILING));
@@ -189,73 +183,119 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 		_openLabel = new JLabel("Enter text below for opening scene");
 		_closeLabel = new JLabel("Enter text below for closing scene");
 		
-		_fontSizeSpinner = new JSpinner(new SpinnerNumberModel(_textForOpen.getFont().getSize(), 5, 72, 1));
-		_colourButton = new JButton("colour");
-		
-		
 		Font defaultFont = new Font ("Ubuntu",_textForOpen.getFont().getStyle(), _textForOpen.getFont().getSize());
-		_textForOpen.setFont(defaultFont);
-		_textForClose.setFont(defaultFont);
 		String ubuntuFont[] = {"Ubuntu", "Ubuntu Condensed", "Ubuntu Light", "Ubuntu Medium", "Ubuntu Mono"};
-		_fontDropBox = new JComboBox(ubuntuFont);
+		//font setting for opening scene --------------------------------------------------------------------------
+		_openFontSizeSpinner = new JSpinner(new SpinnerNumberModel(_textForOpen.getFont().getSize(), 5, 72, 1));
+		_openColourButton = new JButton("colour");
+		
+		_textForOpen.setFont(defaultFont);
+		_openFontDropBox = new JComboBox(ubuntuFont);
+		for (int i =0; i<ubuntuFont.length; i++) {
+			if (_textForOpen.getFont().getName().equals(ubuntuFont[i]) ) {
+				_openFontDropBox.setSelectedIndex(i);
+			}
+		}
+		_openfontSizeLabel = new JLabel("Font Size");
+		_openfontStyleLabel = new JLabel("Font Style");
+		//---------------------------------------------------------------------------------------------
+		
+		//font setting for closing scene----------------------------------------------------------------------------------------
+		_closeFontSizeSpinner = new JSpinner(new SpinnerNumberModel(_textForOpen.getFont().getSize(), 5, 72, 1));
+		_closeColourButton = new JButton("colour");
+		
+		_textForClose.setFont(defaultFont);
+		_closeFontDropBox = new JComboBox(ubuntuFont);
 		
 		for (int i =0; i<ubuntuFont.length; i++) {
 			if (_textForOpen.getFont().getName().equals(ubuntuFont[i]) ) {
-				_fontDropBox.setSelectedIndex(i);
+				_closeFontDropBox.setSelectedIndex(i);
 			}
 		}
+		//------------------------------------------------------------------------------------------------
+		_openfontSizeLabel = new JLabel("Font Size");
+		_openfontStyleLabel = new JLabel("Font Style");
 		
-		_fontSizeLabel = new JLabel("Font Size");
-		_fontStyleLabel = new JLabel("Font Style");
+		_closefontSizeLabel = new JLabel("Font Size");
+		_closefontStyleLabel = new JLabel("Font Style");
 		
 		_saveTextButton = new JButton ("Save Text");
 		_okButton = new JButton("Ok");
 		_quitButton = new JButton("Quit");
 		_cancelButton = new JButton("Cancel");
 		_previewButton = new JButton("Preview");
+		//--------------------------------------------------------------------------------------------------
+		closefontSettingPanel.add(_closefontStyleLabel);
+		closefontSettingPanel.add(_closeFontDropBox);
+		
+		closefontSettingPanel.add(_closeColourButton);
+		closefontSettingPanel.add(_closefontSizeLabel);
+		closefontSettingPanel.add(_closeFontSizeSpinner);
 		
 		
-		fontSettingPanel.add(_fontStyleLabel);
-		fontSettingPanel.add(_fontDropBox);
+		openfontSettingPanel.add(_openfontStyleLabel);
+		openfontSettingPanel.add(_openFontDropBox);
 		
-		fontSettingPanel.add(_colourButton);
-		fontSettingPanel.add(_fontSizeLabel);
-		fontSettingPanel.add(_fontSizeSpinner);
+		openfontSettingPanel.add(_openColourButton);
+		openfontSettingPanel.add(_openfontSizeLabel);
+		openfontSettingPanel.add(_openFontSizeSpinner);
 		
 		confirmationPanel.add(_previewButton);
 		confirmationPanel.add(_saveTextButton);
 		confirmationPanel.add(_okButton);
 		confirmationPanel.add(_cancelButton);
 		confirmationPanel.add(_quitButton);
+		//--------------------------------------------------------------------------------------------------------
 		
-		_colourButton.addActionListener(this);
-		_fontDropBox.addActionListener(this);
+		_openColourButton.addActionListener(this);
+		_openFontDropBox.addActionListener(this);
+		
+		_closeColourButton.addActionListener(this);
+		_closeFontDropBox.addActionListener(this);
+		
 		_quitButton.addActionListener(this);
 		_okButton.addActionListener(this);
 		_cancelButton.addActionListener(this);
 		_saveTextButton.addActionListener(this);
 		_previewButton.addActionListener(this);
 		
-		_fontSizeSpinner.addChangeListener(new ChangeListener() {
+		_openFontSizeSpinner.addChangeListener(new ChangeListener() {
 
 			@Override
 			public void stateChanged(ChangeEvent e) {
 				// TODO Auto-generated method stub
-				SpinnerModel dataModel = _fontSizeSpinner.getModel();
+				SpinnerModel dataModel = _openFontSizeSpinner.getModel();
 		        if (dataModel.getValue() instanceof Integer ) {
 		        	String fontName = _textForOpen.getFont().getName();
 		        	int style = _textForOpen.getFont().getStyle();
 					_textForOpen.setFont(new Font(fontName, style, (int) dataModel.getValue()));
-					_textForClose.setFont(new Font(fontName, style, (int) dataModel.getValue()));
 		        }
 			}
 			
 		});
 		
-		
-		
-		JFormattedTextField txt = ((JSpinner.NumberEditor) _fontSizeSpinner.getEditor()).getTextField();
+		JFormattedTextField txt = ((JSpinner.NumberEditor) _openFontSizeSpinner.getEditor()).getTextField();
 		((NumberFormatter) txt.getFormatter()).setAllowsInvalid(false);
+		
+		_closeFontSizeSpinner.addChangeListener(new ChangeListener() {
+
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				// TODO Auto-generated method stub
+				SpinnerModel dataModel = _closeFontSizeSpinner.getModel();
+		        if (dataModel.getValue() instanceof Integer ) {
+		        	String fontName = _textForClose.getFont().getName();
+		        	int style = _textForClose.getFont().getStyle();
+		        	_textForClose.setFont(new Font(fontName, style, (int) dataModel.getValue()));
+		        }
+			}
+			
+		});
+		
+		txt = ((JSpinner.NumberEditor) _closeFontSizeSpinner.getEditor()).getTextField();
+		((NumberFormatter) txt.getFormatter()).setAllowsInvalid(false);
+		
+		//--------------------------------------------------------------------------------------------------------
 		
 		JPanel textPanel = (JPanel) this.getContentPane();
 		JPanel editingPanel = new JPanel();
@@ -272,9 +312,10 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
 				      .addComponent(_openLabel)
 				      .addComponent(_scrollForOpen, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,GroupLayout.PREFERRED_SIZE)
+				      .addComponent(openfontSettingPanel)
 				      .addComponent(_closeLabel)
 				      .addComponent(_scrollForClose, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,GroupLayout.PREFERRED_SIZE)
-				      .addComponent(fontSettingPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,GroupLayout.PREFERRED_SIZE)
+				      .addComponent(closefontSettingPanel)
 				      .addComponent(confirmationPanel))
 		);
 		
@@ -282,9 +323,10 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 				   layout.createSequentialGroup()
 				           .addComponent(_openLabel)
 				           .addComponent(_scrollForOpen, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,GroupLayout.PREFERRED_SIZE)
+				           .addComponent(openfontSettingPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,GroupLayout.PREFERRED_SIZE)
 				           .addComponent(_closeLabel)
 				           .addComponent(_scrollForClose, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,GroupLayout.PREFERRED_SIZE)
-				           .addComponent(fontSettingPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,GroupLayout.PREFERRED_SIZE)
+				           .addComponent(closefontSettingPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,GroupLayout.PREFERRED_SIZE)
 				           .addComponent(confirmationPanel)
 				);
 
@@ -324,19 +366,30 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 				TextFrame.this.dispatchEvent(new WindowEvent(TextFrame.this, WindowEvent.WINDOW_CLOSING));
 			}
 		}
-		else if (e.getSource() == _fontDropBox) {
-			String fontName = (String) _fontDropBox.getSelectedItem();
+		else if (e.getSource() == _openFontDropBox) {
+			String fontName = (String) _openFontDropBox.getSelectedItem();
 			int style = _textForOpen.getFont().getStyle();
 			int size = _textForOpen.getFont().getSize();
 			_textForOpen.setFont(new Font(fontName, style, size));
+			
+		}
+		else if (e.getSource() == _closeFontDropBox) {
+			String fontName = (String) _closeFontDropBox.getSelectedItem();
+			int style = _textForClose.getFont().getStyle();
+			int size = _textForClose.getFont().getSize();
 			_textForClose.setFont(new Font(fontName, style, size));
 			
 		}
-		else if (e.getSource() == _colourButton) {
+		else if (e.getSource() == _openColourButton) {
 			Color color = JColorChooser.showDialog(TextFrame.this, "Text Color", _textForOpen.getForeground());
 			if (color != null) {
 				_textForOpen.setForeground(color);
 				_textForOpen.updateUI();
+			}
+		}
+		else if (e.getSource() == _closeColourButton) {
+			Color color = JColorChooser.showDialog(TextFrame.this, "Text Color", _textForClose.getForeground());
+			if (color != null) {
 				_textForClose.setForeground(color);
 				_textForClose.updateUI();
 			}
@@ -388,20 +441,36 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 				textInformation.append(_textForClose.getText());
 				textInformation.append(System.getProperty("line.separator"));
 				
-				//font colour
+				//open font colour
 				textInformation.append(_textForOpen.getForeground().getRGB());
 				textInformation.append(System.getProperty("line.separator"));
 				
-				//font name
+				//open font name
 				textInformation.append(_textForOpen.getFont().getName());
 				textInformation.append(System.getProperty("line.separator"));
 				
-				//font size
+				//open font size
 				textInformation.append(_textForOpen.getFont().getSize());
 				textInformation.append(System.getProperty("line.separator"));
 				
-				//font style
+				//open font style
 				textInformation.append(_textForOpen.getFont().getStyle());
+				textInformation.append(System.getProperty("line.separator"));
+				
+				//close font colour
+				textInformation.append(_textForClose.getForeground().getRGB());
+				textInformation.append(System.getProperty("line.separator"));
+				
+				//close font name
+				textInformation.append(_textForClose.getFont().getName());
+				textInformation.append(System.getProperty("line.separator"));
+				
+				//close font size
+				textInformation.append(_textForClose.getFont().getSize());
+				textInformation.append(System.getProperty("line.separator"));
+				
+				//close font style
+				textInformation.append(_textForClose.getFont().getStyle());
 				textInformation.append(System.getProperty("line.separator"));
 				
 				//append the entry to the file 
@@ -471,9 +540,13 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 				BufferedReader br = new BufferedReader(new FileReader(settingFile));
 				String line;
 				int lineCount = 1;
-				String fontName = "Ubuntu";
-				int fontSize = 12;
-				int fontStyle = 0;
+				String openFontName = "Ubuntu";
+				int openFontSize = 12;
+				int openFontStyle = 0;
+				
+				String closeFontName = "Ubuntu";
+				int closeFontSize = 12;
+				int closeFontStyle = 0;
 				//read and publish each line until it reach to end of file
 				//and setting isEmpty 
 				while ((line = br.readLine()) != null) {
@@ -483,24 +556,34 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 					case 2: _textForClose.setText(line);
 							break;
 					case 3: _textForOpen.setForeground(new Color(Integer.parseInt(line)));
-							_textForClose.setForeground(new Color(Integer.parseInt(line)));
 							break;
-					case 4: fontName = line;
-							for ( int i =0; i<_fontDropBox.getSelectedObjects().length; i++ ) {
-								_fontDropBox.setSelectedItem(line);
+					case 4: openFontName = line;
+							for ( int i =0; i<_openFontDropBox.getSelectedObjects().length; i++ ) {
+								_openFontDropBox.setSelectedItem(line);
 							}
 							break;
-					case 5: fontSize = Integer.parseInt(line);
-							_fontSizeSpinner.setValue(fontSize);
+					case 5: openFontSize = Integer.parseInt(line);
+							_openFontSizeSpinner.setValue(openFontSize);
 							break;
-					case 6: fontStyle = Integer.parseInt(line);
-							
+					case 6: openFontStyle = Integer.parseInt(line);
+							break;
+					case 7: _textForClose.setForeground(new Color(Integer.parseInt(line)));
+							break;
+					case 8: closeFontName = line;
+							for ( int i =0; i<_closeFontDropBox.getSelectedObjects().length; i++ ) {
+								_closeFontDropBox.setSelectedItem(line);
+							}
+							break;
+					case 9: closeFontSize = Integer.parseInt(line);
+							_closeFontSizeSpinner.setValue(closeFontSize);
+							break;
+					case 10: closeFontStyle = Integer.parseInt(line);
 							break;
 					}
 					lineCount++;
 				}
-				_textForOpen.setFont(new Font(fontName,fontStyle, fontSize));
-				_textForClose.setFont(new Font(fontName,fontStyle, fontSize));
+				_textForOpen.setFont(new Font(openFontName,openFontStyle, openFontSize));
+				_textForClose.setFont(new Font(closeFontName,closeFontStyle, closeFontSize));
 				br.close();
 				
 			} catch (FileNotFoundException e1) {
