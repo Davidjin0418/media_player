@@ -184,7 +184,7 @@ public class PlayFrame extends JFrame implements ActionListener {
             return outputFileName;
         }
     }
-    // public boolean
+ 
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == btnPlay) {
@@ -248,4 +248,69 @@ public class PlayFrame extends JFrame implements ActionListener {
             
         }
     }
+
+
+    
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		if (e.getSource() == btnPlay) {
+			//play the media.
+			mediaPlayerComponent.getMediaPlayer().play();
+		} else if (e.getSource() == btnPause) {
+			//pause the media.
+			mediaPlayerComponent.getMediaPlayer().pause();
+		} else if (e.getSource() == btnForward) {
+			// need to keep forward or backward
+			mediaPlayerComponent.getMediaPlayer().skip(10000);
+		} else if (e.getSource() == btnBackward) {
+			mediaPlayerComponent.getMediaPlayer().skip(-10000);
+		} else if (e.getSource() == btnMute) {
+			mediaPlayerComponent.getMediaPlayer().mute();
+		} else if (e.getSource() == btnOverlay) {
+               
+		} else if (e.getSource() == btnReplace) {
+             
+		} else if (e.getSource() == btnStrip) {
+			String outputFileName = JOptionPane
+					.showInputDialog("Please enter the output file name");
+			// get from http://www.rgagnon.com/javadetails/java-0370.html choose
+			// a directory to save file
+			JFileChooser chooser = new JFileChooser();
+			chooser.setCurrentDirectory(new java.io.File("."));
+			chooser.setDialogTitle("Chose a diretory to save audio file");
+			chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			//
+			// disable the "All files" option.
+			//
+			chooser.setAcceptAllFileFilterUsed(false);
+			//
+			String path = "";
+			if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+				path = chooser.getSelectedFile().getAbsolutePath();
+				String cmd = "avconv -i " + Main.file +" "
+						+ path + "/" + outputFileName;
+				ProcessBuilder pb = new ProcessBuilder("bash", "-c", cmd);
+				pb.redirectErrorStream(true);
+				try {
+					Process process = pb.start();
+					int exit = process.waitFor();
+					if (exit == 0) {
+						JOptionPane
+						.showMessageDialog(this,
+								"Strip successfully");
+						//choose to play the original file or striped file
+						
+						
+					}
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				} catch (InterruptedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+
+		}
+	}
 }
