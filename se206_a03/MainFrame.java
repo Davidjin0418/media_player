@@ -56,8 +56,8 @@ public class MainFrame extends JFrame implements ActionListener {
         setContentPane(mainPane);
         mainPane.setLayout(null);
         
-        JLabel lblEnterTheUrl = new JLabel("Enter the URl to download:");
-        lblEnterTheUrl.setBounds(5, 5, 167, 16);
+        JLabel lblEnterTheUrl = new JLabel("Enter the URL to download:");
+        lblEnterTheUrl.setBounds(5, 5, 200, 16);
         mainPane.add(lblEnterTheUrl);
         
         downloadURL = new JTextField();
@@ -67,11 +67,11 @@ public class MainFrame extends JFrame implements ActionListener {
         
         btnStartDownload = new JButton("Start download");
         btnStartDownload.addActionListener(this);
-        btnStartDownload.setBounds(282, 26, 138, 29);
+        btnStartDownload.setBounds(282, 26, 150, 29);
         mainPane.add(btnStartDownload);
         
         JLabel lblTheCurrentFile = new JLabel("The current file is:");
-        lblTheCurrentFile.setBounds(6, 88, 115, 16);
+        lblTheCurrentFile.setBounds(6, 88, 200, 16);
         mainPane.add(lblTheCurrentFile);
         
         currentFIle = new JTextField();
@@ -95,11 +95,11 @@ public class MainFrame extends JFrame implements ActionListener {
         mainPane.add(btnAddText);
         
         progressBar = new JProgressBar();
-        progressBar.setBounds(138, 56, 146, 20);
+        progressBar.setBounds(155, 56, 146, 20);
         mainPane.add(progressBar);
         
         JLabel lblDownloadProgress = new JLabel("Download Progress:");
-        lblDownloadProgress.setBounds(5, 56, 146, 20);
+        lblDownloadProgress.setBounds(5, 56, 150, 20);
         mainPane.add(lblDownloadProgress);
     }
     
@@ -240,7 +240,7 @@ public class MainFrame extends JFrame implements ActionListener {
      * @return a string indicating what type of file it is. 
      * It will return "audio" if it's audio file, return "video" if it's video file. 
      * Return "error" if there is an error trying to identify the file type 
-     * Return null if the file is other file type
+     * Return "other" if the file is other file type
      */
     public static String isAudioVideoFile(File file) {
         String s = "file --mime-type " + file.getPath();
@@ -270,7 +270,7 @@ public class MainFrame extends JFrame implements ActionListener {
 			e.printStackTrace();
 		}
         
-		return null;
+		return "other";
     }
 }
 
