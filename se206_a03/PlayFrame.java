@@ -2,7 +2,9 @@ package se206_a03;
 
 import javax.imageio.ImageIO;
 import javax.swing.AbstractButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
@@ -12,6 +14,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
 
 import javax.swing.JButton;
 import javax.swing.ImageIcon;
@@ -51,7 +55,7 @@ public class PlayFrame extends JFrame implements ActionListener {
 		panel.setLayout(new BorderLayout());
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		contentPane.setLayout(null);
-		panel.setBounds(0,0, this.getWidth(), this.getHeight() - 100);
+		panel.setBounds(0, 0, this.getWidth(), this.getHeight() - 100);
 		btnPlay = new JButton("Play", new ImageIcon(
 				PlayFrame.class.getResource("/se206_a03/png/play43.png")));
 		btnPlay.setBounds(10, this.getHeight() - 100, 70, 70);
@@ -103,36 +107,86 @@ public class PlayFrame extends JFrame implements ActionListener {
 		btnReplace.addActionListener(this);
 		btnReplace.setBounds(620, this.getHeight() - 100, 80, 70);
 		contentPane.add(btnReplace);
-		
-		mediaPlayerComponent =new EmbeddedMediaPlayerComponent();
+
+		mediaPlayerComponent = new EmbeddedMediaPlayerComponent();
 		panel.setVisible(true);
-		panel.add(mediaPlayerComponent,BorderLayout.CENTER);
+		panel.add(mediaPlayerComponent, BorderLayout.CENTER);
 		contentPane.add(panel);
 		setContentPane(contentPane);
-		//panel.setBackground(Color.black);
-		mediaPlayerComponent.getMediaPlayer().playMedia(Main.file.getAbsolutePath());
+		// panel.setBackground(Color.black);
+		mediaPlayerComponent.getMediaPlayer().playMedia(
+				Main.file.getAbsolutePath());
 	}
-
+    public boolean fileExist(String s){
+    	File f=new File(s);
+    	if (f.exists()){
+    		return true;
+    	}
+    	else {
+    		return false;
+    	}
+    }
+    public boolean 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if(e.getSource()==btnPlay){
+		if (e.getSource() == btnPlay) {
+			//play the media.
 			mediaPlayerComponent.getMediaPlayer().play();
-		}else if(e.getSource()==btnPause){
+		} else if (e.getSource() == btnPause) {
+			//pause the media.
 			mediaPlayerComponent.getMediaPlayer().pause();
-		}else if(e.getSource()==btnForward){
-			//need to keep forward or backward
+		} else if (e.getSource() == btnForward) {
+			// need to keep forward or backward
 			mediaPlayerComponent.getMediaPlayer().skip(10000);
-		}else if(e.getSource()==btnBackward){
+		} else if (e.getSource() == btnBackward) {
 			mediaPlayerComponent.getMediaPlayer().skip(-10000);
-		}
-		else if(e.getSource()==btnMute){
+		} else if (e.getSource() == btnMute) {
 			mediaPlayerComponent.getMediaPlayer().mute();
-		}else if(e.getSource()==btnOverlay){
-			
-		}else if(e.getSource()==btnReplace){
-			
-		}else if(e.getSource()==btnStrip){
-			
+		} else if (e.getSource() == btnOverlay) {
+               
+		} else if (e.getSource() == btnReplace) {
+             
+		} else if (e.getSource() == btnStrip) {
+			String outputFileName = JOptionPane
+					.showInputDialog("Please enter the output file name");
+			// get from http://www.rgagnon.com/javadetails/java-0370.html choose
+			// a directory to save file
+			JFileChooser chooser = new JFileChooser();
+			chooser.setCurrentDirectory(new java.io.File("."));
+			chooser.setDialogTitle("Chose a diretory to save audio file");
+			chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			//
+			// disable the "All files" option.
+			//
+			chooser.setAcceptAllFileFilterUsed(false);
+			//
+			String path = "";
+			if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+				path = chooser.getSelectedFile().getAbsolutePath();
+				String cmd = "avconv -i " + Main.file +" "
+						+ path + "/" + outputFileName;
+				ProcessBuilder pb = new ProcessBuilder("bash", "-c", cmd);
+				pb.redirectErrorStream(true);
+				try {
+					Process process = pb.start();
+					int exit = process.waitFor();
+					if (exit == 0) {
+						JOptionPane
+						.showMessageDialog(this,
+								"Strip successfully");
+						//choose to play the original file or striped file
+						
+						
+					}
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				} catch (InterruptedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+
 		}
 	}
 }
