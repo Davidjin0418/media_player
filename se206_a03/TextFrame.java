@@ -160,7 +160,8 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 		_textForClose.setEditorKit(new WrapEditorKit());
 		//---------------------------------------------------------------------------------------			
 		_textForClose.setStyledDocument(new DefaultStyledDocument()  {;
-					
+					//We decided the maximum amount of character is 30 because is in between 20 and 40 therefore 
+					//the sentence or phrase doesn't have to be too short as well as not too many word on the screen. 
 					int max = 30;
 					@Override
 				    public void insertString(int offs, String str, AttributeSet attr)throws BadLocationException{

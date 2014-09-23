@@ -42,6 +42,9 @@ public class MainFrame extends JFrame implements ActionListener {
     private JButton btnAddText;
     private JProgressBar progressBar;
     
+    private DownloadWorker _currentDownloadWorker = null;
+    private boolean isDownloading = false;
+    
     /**
      * Create the frame.
      * @throws IOException 
@@ -67,8 +70,9 @@ public class MainFrame extends JFrame implements ActionListener {
         
         btnStartDownload = new JButton("Start download");
         btnStartDownload.addActionListener(this);
-        btnStartDownload.setBounds(282, 26, 150, 29);
+        btnStartDownload.setBounds(282, 26, 175, 29);
         mainPane.add(btnStartDownload);
+       
         
         JLabel lblTheCurrentFile = new JLabel("The current file is:");
         lblTheCurrentFile.setBounds(6, 88, 200, 16);
@@ -95,12 +99,15 @@ public class MainFrame extends JFrame implements ActionListener {
         mainPane.add(btnAddText);
         
         progressBar = new JProgressBar();
-        progressBar.setBounds(155, 56, 146, 20);
+        progressBar.setBounds(155, 60, 146, 20);
+        progressBar.setMinimum(0);
+        progressBar.setMaximum(100);
         mainPane.add(progressBar);
         
         JLabel lblDownloadProgress = new JLabel("Download Progress:");
-        lblDownloadProgress.setBounds(5, 56, 150, 20);
+        lblDownloadProgress.setBounds(5, 60, 150, 20);
         mainPane.add(lblDownloadProgress);
+        
     }
     
     @Override
@@ -130,10 +137,23 @@ public class MainFrame extends JFrame implements ActionListener {
         		PlayFrame playframe=new PlayFrame();
         	}
         } else if (arg0.getSource() == btnStartDownload) {
-            progressBar.setMinimum(0);
-            progressBar.setMaximum(100);
-            DownloadWorker worker=new DownloadWorker();
-            worker.execute();
+        	if (isDownloading == false) {
+	            if (downloadURL.getText().equals("")) {
+	            	JOptionPane.showMessageDialog(this,"ERROR: The url is empty, please enter an url to download");
+	            }
+	            DownloadWorker worker=new DownloadWorker();
+	            isDownloading = true;
+	            btnStartDownload.setText("Cancel Download");
+	            _currentDownloadWorker = worker;
+	            worker.execute();
+        	}
+        	else {
+        		if (_currentDownloadWorker != null) {
+        			_currentDownloadWorker.cancel(true);
+        			progressBar.setValue(0);
+        		}
+        		
+        	}
         }
         
     }
@@ -142,17 +162,8 @@ public class MainFrame extends JFrame implements ActionListener {
     	int exitStatus;
 		@Override
 		protected Void doInBackground() throws Exception {
-			/*for(int i=0;i<=100;i++){
-				publish(i);
-				String url = downloadURL.getText();
-				String cmd = "wget " + url;
-				ProcessBuilder pb = new ProcessBuilder("bash", "-c", cmd);
-				pb.redirectErrorStream(true);
-				pb.start();
-				
-			}*/
 			String url = downloadURL.getText();
-			String cmd = "wget " + url;
+			String cmd = "wget " + "\"" + url + "\"";
 			ProcessBuilder pb = new ProcessBuilder("bash", "-c", cmd);
 			
 			pb.redirectErrorStream(true);
@@ -195,15 +206,21 @@ public class MainFrame extends JFrame implements ActionListener {
 			return null;
 		}
 		 protected void process(List<Integer> chunks) {
-				
+			if (!isCancelled())	 {
 	    	 for (int i : chunks)
 	    		 progressBar.setValue(i);
+			}
 	     }
 		 protected void done(){
-			 String fileName = downloadURL.getText().substring(
-						downloadURL.getText().lastIndexOf('/') + 1,
-						downloadURL.getText().length());
-			 currentFIle.setText(fileName+" has been downloaded");
+			 if (!isCancelled()) {
+				 String fileName = downloadURL.getText().substring(
+							downloadURL.getText().lastIndexOf('/') + 1,
+							downloadURL.getText().length());
+				 currentFIle.setText(fileName+" has been downloaded");
+			 }
+
+			 btnStartDownload.setText("Start Download");
+			 isDownloading = false;
 		 }
     	
     }
@@ -226,7 +243,7 @@ public class MainFrame extends JFrame implements ActionListener {
                 currentFIle.setText(Main.file.getCanonicalPath() + " is chosen");
             } else {
                 JOptionPane.showMessageDialog(this,
-                                              "ERROR:" + file.getName()
+                                              "ERROR: " + file.getName()
                                               + " does not refer to a valid audio/video file");
                 chooseFile();
             }
