@@ -49,7 +49,7 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 		// TODO Auto-generated method stub
 		//command to get the duration
 		StringBuilder durationCmd = new StringBuilder("avconv");
-		durationCmd.append(" -i " + _videoFile.getAbsolutePath());
+		durationCmd.append(" -i " + "\""+ _videoFile.getAbsolutePath() + "\"");
 		
 		ProcessBuilder dBuilder = new ProcessBuilder("/bin/bash", "-c", durationCmd.toString());
 		dBuilder.redirectErrorStream(true);
@@ -94,7 +94,7 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 		//command to process the video
 		StringBuilder cmd  = new StringBuilder("avconv ");		
 		//path to input file, textfilter for open scene
-		cmd. append(" -y -i " + _videoFile.getAbsolutePath() + " -vf \"drawtext=fontfile='");
+		cmd. append(" -y -i " + "\"" + _videoFile.getAbsolutePath() + "\"" + " -vf \"drawtext=fontfile='");
 		String fontPath;
 		if (_openTextFont.getName().equals("Ubuntu Light")) {
 			fontPath ="/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-L.ttf':";
@@ -175,7 +175,7 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 		//using the same audio from the source file so don't need to re encode the audio file again.
 		cmd.append(" -c:a copy ");
 		
-		cmd.append("[TEXTFILTER]" + _videoFile.getName());
+		cmd.append("\"[TEXTFILTER]" + _videoFile.getName() +"\"");
 		ProcessBuilder builder = new ProcessBuilder("/bin/bash", "-c", cmd.toString());
 		builder.redirectErrorStream(true);
 		

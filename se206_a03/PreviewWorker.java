@@ -44,7 +44,7 @@ public class PreviewWorker extends SwingWorker<Integer,Integer> {
 	protected Integer doInBackground() throws Exception {
 		// TODO Auto-generated method stub
 		StringBuilder durationCmd = new StringBuilder("avconv");
-		durationCmd.append(" -i " + _videoFile.getAbsolutePath());
+		durationCmd.append(" -i " + "\"" + _videoFile.getAbsolutePath() + "\"");
 		
 		ProcessBuilder dBuilder = new ProcessBuilder("/bin/bash", "-c", durationCmd.toString());
 		dBuilder.redirectErrorStream(true);
