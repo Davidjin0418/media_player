@@ -89,6 +89,7 @@ public class PreviewWorker extends TextFilterWorker {
 	
 	public void done() {
 		_button.setEnabled(true);
+		removeTempFile();
 	}
 
 }

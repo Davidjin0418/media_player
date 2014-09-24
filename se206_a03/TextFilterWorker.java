@@ -142,11 +142,9 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 			_bar.setValue(0);
 			_bar.setString("Cancelled");
 		}
-		if (_closeTempFile.exists()) {
-			_closeTempFile.delete();
-		}
-		_button.setEnabled(true);
 		
+		_button.setEnabled(true);
+		removeTempFile();
 	}
 	
 	public void process(List<Integer> n) {
@@ -292,7 +290,7 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 			//create a string builder to for making the entry string
 			StringBuilder textInformation = new StringBuilder();
 			
-			//opening scene
+			//closing scene
 			textInformation.append(_closeText);
 			textInformation.append(System.getProperty("line.separator"));
 			
@@ -326,6 +324,15 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 		cmd.append("fontcolor=0x" + redClose+greenClose+blueClose + ":");
 		cmd.append("draw='gt(t," + ((int)_timeLength-10) +")':\"");
 		return cmd.toString();
+	}
+	
+	protected void removeTempFile() {
+		if (_closeTempFile.exists()) {
+			_closeTempFile.delete();
+		}
+		if (_openTempFile.exists()) {
+			_openTempFile.delete();
+		}
 	}
 
 }

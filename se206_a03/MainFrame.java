@@ -329,16 +329,13 @@ public class MainFrame extends JFrame implements ActionListener {
 		try {
 			process = pb.start();
 			BufferedReader stdout = new BufferedReader(new InputStreamReader(process.getInputStream()));
-	        String out = stdout.readLine();
-	      	//used java regex to see if the output from file command contain video or audio
-	        //then store it into a  variable to use it.
-	        String path = file.getAbsolutePath().replace("(", "\\(");
-	        path = path.replace(")", "\\)");
-	        Pattern fileTypePattern = Pattern.compile(path + ": (audio|video)/.*");
-	        Matcher patternMatcher = fileTypePattern.matcher(out);
-	        if (patternMatcher.find()) {
-	        	return patternMatcher.group(1);
-	        }
+	        
+			//used string contain method rather than java regex pattern and matcher to avoid dealing with special characters
+			String out;
+	        while ((out = stdout.readLine()) != null ) {
+				if (out.contains(file.getAbsolutePath() + ": audio")) return "audio";
+				if (out.contains(file.getAbsolutePath() + ": video")) return "video";
+			}
 	        
 	        if (process.waitFor() != 0) {
 	        	return "error";
