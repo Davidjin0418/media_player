@@ -24,7 +24,6 @@ public class Main {
 			MainFrame mainFrame=new MainFrame();
 			mainFrame.setTitle("Welcome to VAMIX");
 			mainFrame.setSize(500, 400);
-			mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			mainFrame.setVisible(true);
 			mainFrame.setResizable(false);
 		}
