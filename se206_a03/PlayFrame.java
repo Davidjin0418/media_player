@@ -121,30 +121,29 @@ public class PlayFrame extends JFrame implements ActionListener {
         contentPane.add(panel);
         
         time = new JSlider();
-        //get time of media
-        //time.setMaximum(mediaPlayerComponent.getMediaPlayer().getLength());
-        /*time.addChangeListener(new ChangeListener() {
-         
-         @Override
-         public void stateChanged(ChangeEvent e) {
-         mediaPlayerComponent.getMediaPlayer()
-         .;
-         
-         }
-         });*/
+        // get time of media
+        time.setMaximum((int)mediaPlayerComponent.getMediaPlayer().getLength());
+        time.setValue((int)mediaPlayerComponent.getMediaPlayer().getTime());
+        time.addChangeListener(new ChangeListener() {
+            //
+            @Override public void stateChanged(ChangeEvent e) {
+                mediaPlayerComponent.getMediaPlayer().setTime(time.getValue());;
+                
+            } });
+        
         panel.add(time, BorderLayout.SOUTH);
         setContentPane(contentPane);
         
         volume = new JSlider();
         volume.setMaximum(200);
-        volume.setValue(0);
+        volume.setValue(50);
         volume.setBounds(400, 374, 118, 29);
         volume.addChangeListener(new ChangeListener() {
             
             @Override
             public void stateChanged(ChangeEvent e) {
-                mediaPlayerComponent.getMediaPlayer()
-                .setVolume(volume.getValue());
+                mediaPlayerComponent.getMediaPlayer().setVolume(
+                                                                volume.getValue());
                 
             }
         });
@@ -155,11 +154,23 @@ public class PlayFrame extends JFrame implements ActionListener {
         editProgressBar = new JProgressBar();
         editProgressBar.setBounds(598, 365, 146, 20);
         contentPane.add(editProgressBar);
+        
+        this.addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                mediaPlayerComponent.getMediaPlayer().stop();
+            }
+        });
     }
     
     public void stripaudio() throws IOException, InterruptedException {
-        extractAudio();
         String[] options = { "Yes", "No" };
+        int extract = JOptionPane.showOptionDialog(null,
+                                                   "Do you want to save the audio file seperately?", "Warning",
+                                                   JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null,
+                                                   options, options[0]);
+        if (extract == 0) {
+            extractAudio();
+        }
         int selection = JOptionPane
         .showOptionDialog(
                           null,
@@ -167,9 +178,16 @@ public class PlayFrame extends JFrame implements ActionListener {
                           "Warning", JOptionPane.DEFAULT_OPTION,
                           JOptionPane.WARNING_MESSAGE, null, options, options[0]);
         if (selection == 0) {
-            
+            String cmd = "avconv -i " + Main.file + " -an " + Main.file;
+            ProcessBuilder pb = new ProcessBuilder("bash", "-c", cmd);
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
         } else {
-            
+            String output = chooseOutputFileName();
+            String cmd = "avconv -i " + Main.file + " -an " + output;
+            ProcessBuilder pb = new ProcessBuilder("bash", "-c", cmd);
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
         }
     }
     
@@ -201,7 +219,7 @@ public class PlayFrame extends JFrame implements ActionListener {
     
     // choose the directory in order to save the file
     public String choosePath() {
-        // get from http://www.rgagnon.com/javadetails/java-0370.html
+        // from http://www.rgagnon.com/javadetails/java-0370.html
         JFileChooser chooser = new JFileChooser();
         chooser.setCurrentDirectory(new java.io.File("."));
         chooser.setDialogTitle("Chose a diretory");
@@ -234,6 +252,7 @@ public class PlayFrame extends JFrame implements ActionListener {
             mediaPlayerComponent.getMediaPlayer().skip(-10000);
         } else if (e.getSource() == btnMute) {
             mediaPlayerComponent.getMediaPlayer().mute();
+            volume.setValue(0);
         } else if (e.getSource() == btnEdit) {
             if (MainFrame.isAudioVideoFile(Main.file).equals("audio")) {
                 JOptionPane
@@ -246,8 +265,55 @@ public class PlayFrame extends JFrame implements ActionListener {
                                                              "Which one would you like to do", "Option",
                                                              JOptionPane.DEFAULT_OPTION,
                                                              JOptionPane.WARNING_MESSAGE, null, options, options[0]);
-                VideoWorker worker =new VideoWorker(selection);
-                worker.execute();
+                String cmd = "";
+                if (selection == 0) {
+                    try {
+                        // overlay
+                        String inputFile = chooseInputAudioFile();
+                        String outputFile = chooseOutputFileName();
+                        cmd = "avconv -i "
+                        + Main.file
+                        + " -i "
+                        + inputFile
+                        + " -filter_complex amix=inputs=2 -strict experimental "
+                        + outputFile;
+                        VideoWorker worker = new VideoWorker(cmd);
+                        worker.execute();
+                    } catch (IOException e1) {
+                        // TODO Auto-generated catch block
+                        e1.printStackTrace();
+                    }
+                    
+                } else if (selection == 1) {
+                    // replace
+                    try {
+                        String inputFile = chooseInputAudioFile();
+                        String outputFile = chooseOutputFileName();
+                        cmd = "avconv -i "
+                        + inputFile
+                        + " -i "
+                        + Main.file
+                        + " -map 0:0 -map 1:0 -acodec copy -vcodec copy -shortest "
+                        + outputFile;
+                        VideoWorker worker =new VideoWorker(cmd);
+                        worker.execute();
+                    } catch (IOException e1) {
+                        // TODO Auto-generated catch block
+                        e1.printStackTrace();
+                    }
+                    
+                } else if (selection == 2) {
+                    // check if the audio signals exists
+                    if (mediaPlayerComponent.getMediaPlayer()
+                        .getAudioTrackCount() == 0) {
+                        JOptionPane.showMessageDialog(this,
+                                                      "No audio signal exists");
+                        
+                    } else {
+                        
+                    }
+                }
+                
             }
         }
     }
@@ -276,27 +342,6 @@ public class PlayFrame extends JFrame implements ActionListener {
         
     }
     
-    public void replaceAudio() {
-        
-    }
-    
-    // method to overlay the audio
-    public void overlayAudio() throws IOException {
-        String inputAudio = chooseInputAudioFile();
-        String cmd = "avconv -i " + Main.file + " -i " + inputAudio
-        + " -c copy test.avi";
-        ProcessBuilder pb = new ProcessBuilder("bash", "-c", cmd);
-        pb.redirectErrorStream(true);
-        Process process = pb.start();
-        BufferedReader stdout = new BufferedReader(new InputStreamReader(
-                                                                         process.getInputStream()));
-        String line;
-        while ((line = stdout.readLine()) != null) {
-            
-            System.out.println(line);
-        }
-    }
-    
     // method to extract the audio
     public void extractAudio() throws IOException, InterruptedException {
         String outputFileName = chooseOutputFileName();
@@ -313,54 +358,61 @@ public class PlayFrame extends JFrame implements ActionListener {
         }
         int exit = process.waitFor();
         if (exit == 0) {
-            JOptionPane.showMessageDialog(this, "Strip successfully");
+            JOptionPane.showMessageDialog(this, "extract successfully");
         } else {
             JOptionPane.showMessageDialog(this, "Error");
         }
         
     }
     
-    // if close the media ,the play should stop
-    public class VideoWorker extends SwingWorker<Void,Integer>{
-        private int options;
-        public VideoWorker(int option){
+    // strip
+    // backward forward
+    public class BackwardFarwardWorker extends SwingWorker<Void, Void>{
+        int options;
+        //options:0 for forward ,1 for backward.
+        public BackwardFarwardWorker(int option){
             options=option;
-        }
-        protected void process(List<Integer> chunks) {
-            if(!isCancelled()){
-                for(int i:chunks){
-                    editProgressBar.setValue(i);
-                }
-            }
         }
         @Override
         protected Void doInBackground() throws Exception {
-            if(!isCancelled()){
-                if(options==0){
-                    //overlay the audio with video
-                    for (int i=0;i<=100;i++){
-                        overlayAudio();
-                        publish(i);
-                    }
-                    
-                }else if(options==1){
-                    //replace
-                    for (int i=0;i<=100;i++){
-                        replaceAudio();
-                        publish(i);
-                    }
-                }else if(options==2){
-                    //strip 
-                    for(int i=0;i<=100;i++){
-                        stripaudio();
-                        publish(i);
-                    }
-                    
-                }
+            if(options==0){
+                
+            }else if(options==1){
+                
             }
             return null;
         }
         
+    }
+    public class VideoWorker extends SwingWorker<Void, Integer> {
+        private String _cmd;
+        
+        public VideoWorker(String cmd) {
+            _cmd = cmd;
+        }
+        
+        protected void process(List<Integer> chunks) {
+            if (!isCancelled()) {
+                for (int i : chunks) {
+                    editProgressBar.setValue(i);
+                }
+            }
+        }
+        
+        @Override
+        protected Void doInBackground() throws Exception {
+            ProcessBuilder pb = new ProcessBuilder(_cmd);
+            
+            pb.redirectErrorStream(true);
+            
+            if (!isCancelled()) {
+                for (int i = 0; i <= 100; i++) {
+                    pb.start();
+                    publish(i);
+                }
+            }
+            return null;
+        }
         
     }
     
