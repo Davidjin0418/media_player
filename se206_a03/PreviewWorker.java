@@ -55,7 +55,6 @@ public class PreviewWorker extends TextFilterWorker {
 		//using the same audio from the source file so don't need to re encode the audio file again.
 		//cmd.append(" -c:a copy ");
 		cmd.append(" -i \"" + _videoFile.getAbsolutePath() + "\"");
-		System.out.println(cmd.toString());
 		ProcessBuilder builder = new ProcessBuilder("/bin/bash", "-c", cmd.toString());
 		builder.redirectErrorStream(true);
 		

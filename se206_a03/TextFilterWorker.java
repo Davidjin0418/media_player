@@ -3,10 +3,13 @@ package se206_a03;
 import java.awt.Color;
 import java.awt.Font;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -31,6 +34,9 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 	protected JButton _button;
 	protected int _exitStatus;
 	private double _timeLength;
+	
+    protected File _closeTempFile;
+    protected File _openTempFile;
 	
 	public TextFilterWorker(File file , JProgressBar progress, JTextPane _textForOpen, JTextPane _textForClose, JButton _okButton) {
 		_videoFile = file;
@@ -136,6 +142,9 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 			_bar.setValue(0);
 			_bar.setString("Cancelled");
 		}
+		if (_closeTempFile.exists()) {
+			_closeTempFile.delete();
+		}
 		_button.setEnabled(true);
 		
 	}
@@ -191,6 +200,7 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 	}
 	
 	protected String createTextParameter() {
+		
 		StringBuilder cmd = new StringBuilder();
 		String fontPath;
 		if (_openTextFont.getName().equals("Ubuntu Light")) {
@@ -209,7 +219,31 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 			fontPath ="/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-R.ttf':";
 		}
 		cmd.append(fontPath);
-		cmd.append("text='" + _openText + "':");
+		
+
+		BufferedWriter bw;
+		try {
+			_openTempFile = new File("openTempFile.txt");
+			_openTempFile.createNewFile();
+			bw = new BufferedWriter(new FileWriter(_openTempFile, false));
+			PrintWriter pw = new PrintWriter(bw);
+			
+			//create a string builder to for making the entry string
+			StringBuilder textInformation = new StringBuilder();
+			
+			//opening scene
+			textInformation.append(_openText);
+			textInformation.append(System.getProperty("line.separator"));
+			
+			//append the entry to the file 
+			pw.append(textInformation.toString());
+			pw.close();
+			bw.close();
+		} catch (IOException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+		cmd.append("textfile='" + _openTempFile.getAbsolutePath() + "':");
 		cmd.append("x=50:");
 		cmd.append("y=50:");
 		cmd.append("fontsize=" + _openTextFont.getSize() + ":");
@@ -248,7 +282,30 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 			fontPath ="/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-R.ttf':";
 		}
 		cmd.append(fontPath);
-		cmd.append("text='" + _closeText + "':");
+		
+		try {
+			_closeTempFile = new File("closeTempFile.txt");
+			_closeTempFile.createNewFile();
+			bw = new BufferedWriter(new FileWriter(_closeTempFile, false));
+			PrintWriter pw = new PrintWriter(bw);
+			
+			//create a string builder to for making the entry string
+			StringBuilder textInformation = new StringBuilder();
+			
+			//opening scene
+			textInformation.append(_closeText);
+			textInformation.append(System.getProperty("line.separator"));
+			
+			//append the entry to the file 
+			pw.append(textInformation.toString());
+			pw.close();
+			bw.close();
+		} catch (IOException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+		
+		cmd.append("textfile='" + _closeTempFile.getAbsolutePath() + "':");
 		cmd.append("x=50:");
 		cmd.append("y=200:");
 		cmd.append("fontsize=" + _closeTextFont.getSize() + ":");
