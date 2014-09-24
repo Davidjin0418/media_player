@@ -18,6 +18,8 @@ import javax.swing.JTextField;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
@@ -32,7 +34,7 @@ import javax.swing.JProgressBar;
 import javax.swing.SwingConstants;
 
 
-public class MainFrame extends JFrame implements ActionListener {
+public class MainFrame extends JFrame implements ActionListener, WindowListener {
     
     private JPanel mainPane;
     private JTextField downloadURL;
@@ -52,7 +54,9 @@ public class MainFrame extends JFrame implements ActionListener {
      */
     public MainFrame() throws IOException {
         setTitle("Welcome to VAMIX");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+       
+        this.addWindowListener(this);
+        
         setBounds(100, 100, 450, 300);
         mainPane = new JPanel();
         mainPane.setBackground(new Color(238, 238, 238));
@@ -105,12 +109,14 @@ public class MainFrame extends JFrame implements ActionListener {
         progressBar.setMinimum(0);
         progressBar.setMaximum(100);
         progressBar.setStringPainted(true);
+        progressBar.setString("");
         mainPane.add(progressBar);
         
         JLabel lblDownloadProgress = new JLabel("Download Progress:");
         lblDownloadProgress.setBounds(5, 60, 150, 20);
         mainPane.add(lblDownloadProgress);
         
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
     }
     
     @Override
@@ -119,7 +125,8 @@ public class MainFrame extends JFrame implements ActionListener {
             //create a text window.
         	if (Main.file !=null ) {
         		if (isAudioVideoFile(Main.file).equals("video")) {
-        			TextFrame textframe = new TextFrame();
+        			TextFrame textframe = new TextFrame(btnAddText);
+        			btnAddText.setEnabled(false);
         		}
         		else {
         			JOptionPane.showMessageDialog(this,
@@ -143,6 +150,7 @@ public class MainFrame extends JFrame implements ActionListener {
         	if (isDownloading == false) {
 	            if (downloadURL.getText().equals("")) {
 	            	JOptionPane.showMessageDialog(this,"ERROR: The url is empty, please enter an url to download");
+	            	return;
 	            }
 	            
 	            //Retrieve the url from the text field and cut out the end of it
@@ -300,7 +308,7 @@ public class MainFrame extends JFrame implements ActionListener {
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             File file = fc.getSelectedFile();
            
-            if ( isAudioVideoFile(file).equals("audio") | isAudioVideoFile(file).equals("video") ) {
+            if ( isAudioVideoFile(file).equals("audio") || isAudioVideoFile(file).equals("video") ) {
             	Main.file = file;
                 currentFIle.setText(Main.file.getCanonicalPath() + " is chosen");
             } else {
@@ -322,21 +330,20 @@ public class MainFrame extends JFrame implements ActionListener {
      * Return "other" if the file is other file type
      */
     public static String isAudioVideoFile(File file) {
-        String s = "file --mime-type " + file.getPath();
+        String s = "file --mime-type " + "\"" +file.getAbsolutePath() +"\"";
         ProcessBuilder pb = new ProcessBuilder("bash", "-c", s);
         pb.redirectErrorStream(true);
         Process process;
 		try {
 			process = pb.start();
 			BufferedReader stdout = new BufferedReader(new InputStreamReader(process.getInputStream()));
-	        String out = stdout.readLine();
-	      	//used java regex to see if the output from file command contain video or audio
-	        //then store it into a  variable to use it.
-	        Pattern fileTypePattern = Pattern.compile(file.getAbsolutePath()+": (audio|video)/.*");
-	        Matcher patternMatcher = fileTypePattern.matcher(out);
-	        if (patternMatcher.find()) {
-	        	return patternMatcher.group(1);
-	        }
+	        
+			//used string contain method rather than java regex pattern and matcher to avoid dealing with special characters
+			String out;
+	        while ((out = stdout.readLine()) != null ) {
+				if (out.contains(file.getAbsolutePath() + ": audio")) return "audio";
+				if (out.contains(file.getAbsolutePath() + ": video")) return "video";
+			}
 	        
 	        if (process.waitFor() != 0) {
 	        	return "error";
@@ -397,6 +404,86 @@ public class MainFrame extends JFrame implements ActionListener {
 		
 		return false;
 		
+		
+	}
+
+	@Override
+	public void windowOpened(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowClosing(WindowEvent e) {
+		// TODO Auto-generated method stub
+		if (isDownloading == false) {
+			if (this.btnAddText.isEnabled() == false) {
+				int yn = JOptionPane.showConfirmDialog(this,
+					    "Closing this window will close Play Frame or Text Editing Frame as well, do you want to continue ?",
+					    "Warning",
+					    JOptionPane.YES_NO_OPTION);
+				
+				if (yn == 0) {
+					System.exit(0);
+				}
+			}
+			else {
+				System.exit(0);
+			}
+		}
+		else {
+			int yn = JOptionPane.showConfirmDialog(this,
+				    "The program is downloading a file, would you like to cancel the download and quit the program ?",
+				    "Warning",
+				    JOptionPane.YES_NO_OPTION);
+			
+			if (yn == 0) {
+				if (this.btnAddText.isEnabled() == false) {
+					int confirm = JOptionPane.showConfirmDialog(this,
+						    "Closing this window will close Play Frame or Text Editing Frame as well, do you want to continue ?",
+						    "Warning",
+						    JOptionPane.YES_NO_OPTION);
+					
+					if (confirm == 0) {
+						this._currentDownloadWorker.cancel(true);
+						System.exit(0);
+						
+					}
+				}
+				else {
+					System.exit(0);
+				}
+			}
+		}
+	}
+
+	@Override
+	public void windowClosed(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowIconified(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowDeiconified(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowActivated(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowDeactivated(WindowEvent e) {
+		// TODO Auto-generated method stub
 		
 	}
 }

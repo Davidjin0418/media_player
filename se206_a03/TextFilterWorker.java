@@ -3,10 +3,13 @@ package se206_a03;
 import java.awt.Color;
 import java.awt.Font;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -18,18 +21,22 @@ import javax.swing.SwingWorker;
 
 public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 	
-	File _videoFile;
-	JProgressBar _bar;
-	Font _openTextFont;
-	Color _openTextColour;
+	protected File _videoFile;
+	protected JProgressBar _bar;
+	protected Font _openTextFont;
+	protected Color _openTextColour;
 	
-	Font _closeTextFont;
-	Color _closeTextColour;
+	protected Font _closeTextFont;
+	protected Color _closeTextColour;
 	
-	String _openText;
-	String _closeText;
-	JButton _button;
-	int _exitStatus;
+	protected String _openText;
+	protected String _closeText;
+	protected JButton _button;
+	protected int _exitStatus;
+	private double _timeLength;
+	
+    protected File _closeTempFile;
+    protected File _openTempFile;
 	
 	public TextFilterWorker(File file , JProgressBar progress, JTextPane _textForOpen, JTextPane _textForClose, JButton _okButton) {
 		_videoFile = file;
@@ -44,138 +51,26 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 		_button = _okButton;
 	}
 
+	public TextFilterWorker() {
+		// TODO Auto-generated constructor stub
+	}
+
 	@Override
 	protected Integer doInBackground() throws Exception {
 		// TODO Auto-generated method stub
 		//command to get the duration
-		StringBuilder durationCmd = new StringBuilder("avconv");
-		durationCmd.append(" -i " + _videoFile.getAbsolutePath());
-		
-		ProcessBuilder dBuilder = new ProcessBuilder("/bin/bash", "-c", durationCmd.toString());
-		dBuilder.redirectErrorStream(true);
-		double timeLength = 0;
-		Process dProcess;
-		try {
-			
-			dProcess = dBuilder.start();
-
-			//getting the input stream to read the command output
-			InputStream stdout = dProcess.getInputStream();		
-			BufferedReader stdoutBuffered = new BufferedReader(new InputStreamReader(stdout));
-			String line;
-			
-			//22 character (0 -21 index)
-			Pattern durationPat = Pattern.compile("Duration:\\s(\\d\\d):(\\d\\d):(\\d\\d.\\d\\d),");
-			
-
-			// time[s]*bitrate[kbps] = size[MB]
-			while ((line = stdoutBuffered.readLine()) != null  && !isCancelled()) {
-				Matcher durationMatcher = durationPat.matcher(line);
-				if (durationMatcher.find()) {
-					double second = Double.parseDouble(durationMatcher.group(3));
-					double minute = Double.parseDouble(durationMatcher.group(2));
-					double hour = Double.parseDouble(durationMatcher.group(1));
-					
-					timeLength = (3600*hour) + (60*minute) + second;
-				}
-			}
-			
-			dProcess.getInputStream().close();
-	        dProcess.getOutputStream().close();
-	        dProcess.getErrorStream().close();
-	        dProcess.destroy();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		
+		parseDuration();
 		
 		//command to process the video
 		StringBuilder cmd  = new StringBuilder("avconv ");		
 		//path to input file, textfilter for open scene
-		cmd. append(" -y -i " + _videoFile.getAbsolutePath() + " -vf \"drawtext=fontfile='");
-		String fontPath;
-		if (_openTextFont.getName().equals("Ubuntu Light")) {
-			fontPath ="/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-L.ttf':";
-		}
-		else if (_openTextFont.getName().equals("Ubuntu Medium")) {
-			fontPath ="/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-M.ttf':";
-		}
-		else if (_openTextFont.getName().equals("Ubuntu Mono")) {
-			fontPath ="/usr/share/fonts/truetype/ubuntu-font-family/UbuntuMono-R.ttf':";
-		}
-		else if (_openTextFont.getName().equals("Ubuntu Condensed")) {
-			fontPath ="/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-C.ttf':";
-		}	
-		else {
-			fontPath ="/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-R.ttf':";
-		}
-		cmd.append(fontPath);
-		cmd.append("text='" + _openText + "':");
-		cmd.append("x=50:");
-		cmd.append("y=50:");
-		cmd.append("fontsize=" + _openTextFont.getSize() + ":");
-
-		String red = Integer.toHexString(_openTextColour.getRed());
-		if (red.length() == 1) {
-			red = "0" + red;
-		}
-		String green = Integer.toHexString(_openTextColour.getGreen());
-		if (green.length() == 1) {
-			green = "0" + green;
-		}
-		String blue = Integer.toHexString(_openTextColour.getBlue());
-		if (blue.length() == 1) {
-			blue = "0" + blue;
-		}
-		cmd.append("fontcolor=0x" + red+green+blue + ":");
+		cmd. append(" -y -i " + "\"" + _videoFile.getAbsolutePath() + "\"" + " -vf \"drawtext=fontfile='");
 		
-		cmd.append("draw='lt(t,10)':");
-		
-		//text filter for closing scene
-		cmd.append(",drawtext=fontfile='");
-		if (_closeTextFont.getName().equals("Ubuntu Light")) {
-			fontPath ="/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-L.ttf':";
-		}
-		else if (_closeTextFont.getName().equals("Ubuntu Medium")) {
-			fontPath ="/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-M.ttf':";
-		}
-		else if (_closeTextFont.getName().equals("Ubuntu Mono")) {
-			fontPath ="/usr/share/fonts/truetype/ubuntu-font-family/UbuntuMono-R.ttf':";
-		}
-		else if (_closeTextFont.getName().equals("Ubuntu Condensed")) {
-			fontPath ="/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-C.ttf':";
-		}
-		else {
-			fontPath ="/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-R.ttf':";
-		}
-		cmd.append(fontPath);
-		cmd.append("text='" + _closeText + "':");
-		cmd.append("x=50:");
-		cmd.append("y=200:");
-		cmd.append("fontsize=" + _closeTextFont.getSize() + ":");
-		
-		String redClose = Integer.toHexString(_closeTextColour.getRed());
-		if (redClose.length() == 1) {
-			redClose = "0" + redClose;
-		}
-		String greenClose = Integer.toHexString(_closeTextColour.getGreen());
-		if (greenClose.length() == 1) {
-			greenClose = "0" + greenClose;
-		}
-		String blueClose = Integer.toHexString(_closeTextColour.getBlue());
-		if (blueClose.length() == 1) {
-			blueClose = "0" + blueClose;
-		}
-		
-		cmd.append("fontcolor=0x" + redClose+greenClose+blueClose + ":");
-		cmd.append("draw='gt(t," + ((int)timeLength-10) +")':\"");
-		
+		cmd.append(this.createTextParameter());
 		//using the same audio from the source file so don't need to re encode the audio file again.
 		cmd.append(" -c:a copy ");
 		
-		cmd.append("[TEXTFILTER]" + _videoFile.getName());
+		cmd.append("\"[TEXTFILTER]" + _videoFile.getName() +"\"");
 		ProcessBuilder builder = new ProcessBuilder("/bin/bash", "-c", cmd.toString());
 		builder.redirectErrorStream(true);
 		
@@ -205,7 +100,7 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 					progress = progressMatcher.group(0);
 					currentSize = Double.parseDouble(progressMatcher.group(1)) / 1024;
 					bitrate = Double.parseDouble(progressMatcher.group(2));
-					double finalSize = timeLength*bitrate /(8*1024);
+					double finalSize = _timeLength*bitrate /(8*1024);
 					double percentage = (currentSize/finalSize)*100;
 					publish((int)percentage);
 					
@@ -247,14 +142,196 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 			_bar.setValue(0);
 			_bar.setString("Cancelled");
 		}
-		_button.setEnabled(true);
 		
+		_button.setEnabled(true);
+		removeTempFile();
 	}
 	
 	public void process(List<Integer> n) {
 		for (Integer currentPercentage : n) {
 			_bar.setValue(currentPercentage);
 			_bar.setString(currentPercentage + "%");
+		}
+	}
+	
+	protected void parseDuration () {
+		StringBuilder durationCmd = new StringBuilder("avconv");
+		durationCmd.append(" -i " + "\""+ _videoFile.getAbsolutePath() + "\"");
+		
+		ProcessBuilder dBuilder = new ProcessBuilder("/bin/bash", "-c", durationCmd.toString());
+		dBuilder.redirectErrorStream(true);
+		_timeLength = 0;
+		Process dProcess;
+		try {
+			
+			dProcess = dBuilder.start();
+
+			//getting the input stream to read the command output
+			InputStream stdout = dProcess.getInputStream();		
+			BufferedReader stdoutBuffered = new BufferedReader(new InputStreamReader(stdout));
+			String line;
+			
+			//22 character (0 -21 index)
+			Pattern durationPat = Pattern.compile("Duration:\\s(\\d\\d):(\\d\\d):(\\d\\d.\\d\\d),");
+			
+
+			// time[s]*bitrate[kbps] = size[MB]
+			while ((line = stdoutBuffered.readLine()) != null  && !isCancelled()) {
+				Matcher durationMatcher = durationPat.matcher(line);
+				if (durationMatcher.find()) {
+					double second = Double.parseDouble(durationMatcher.group(3));
+					double minute = Double.parseDouble(durationMatcher.group(2));
+					double hour = Double.parseDouble(durationMatcher.group(1));
+					
+					_timeLength = (3600*hour) + (60*minute) + second;
+				}
+			}
+			
+			dProcess.getInputStream().close();
+	        dProcess.getOutputStream().close();
+	        dProcess.getErrorStream().close();
+	        dProcess.destroy();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	protected String createTextParameter() {
+		
+		StringBuilder cmd = new StringBuilder();
+		String fontPath;
+		if (_openTextFont.getName().equals("Ubuntu Light")) {
+			fontPath ="/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-L.ttf':";
+		}
+		else if (_openTextFont.getName().equals("Ubuntu Medium")) {
+			fontPath ="/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-M.ttf':";
+		}
+		else if (_openTextFont.getName().equals("Ubuntu Mono")) {
+			fontPath ="/usr/share/fonts/truetype/ubuntu-font-family/UbuntuMono-R.ttf':";
+		}
+		else if (_openTextFont.getName().equals("Ubuntu Condensed")) {
+			fontPath ="/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-C.ttf':";
+		}	
+		else {
+			fontPath ="/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-R.ttf':";
+		}
+		cmd.append(fontPath);
+		
+
+		BufferedWriter bw;
+		try {
+			_openTempFile = new File("openTempFile.txt");
+			_openTempFile.createNewFile();
+			bw = new BufferedWriter(new FileWriter(_openTempFile, false));
+			PrintWriter pw = new PrintWriter(bw);
+			
+			//create a string builder to for making the entry string
+			StringBuilder textInformation = new StringBuilder();
+			
+			//opening scene
+			textInformation.append(_openText);
+			textInformation.append(System.getProperty("line.separator"));
+			
+			//append the entry to the file 
+			pw.append(textInformation.toString());
+			pw.close();
+			bw.close();
+		} catch (IOException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+		cmd.append("textfile='" + _openTempFile.getAbsolutePath() + "':");
+		cmd.append("x=50:");
+		cmd.append("y=50:");
+		cmd.append("fontsize=" + _openTextFont.getSize() + ":");
+
+		String red = Integer.toHexString(_openTextColour.getRed());
+		if (red.length() == 1) {
+			red = "0" + red;
+		}
+		String green = Integer.toHexString(_openTextColour.getGreen());
+		if (green.length() == 1) {
+			green = "0" + green;
+		}
+		String blue = Integer.toHexString(_openTextColour.getBlue());
+		if (blue.length() == 1) {
+			blue = "0" + blue;
+		}
+		cmd.append("fontcolor=0x" + red+green+blue + ":");
+		
+		cmd.append("draw='lt(t,10)':");
+		
+		//text filter for closing scene
+		cmd.append(",drawtext=fontfile='");
+		if (_closeTextFont.getName().equals("Ubuntu Light")) {
+			fontPath ="/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-L.ttf':";
+		}
+		else if (_closeTextFont.getName().equals("Ubuntu Medium")) {
+			fontPath ="/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-M.ttf':";
+		}
+		else if (_closeTextFont.getName().equals("Ubuntu Mono")) {
+			fontPath ="/usr/share/fonts/truetype/ubuntu-font-family/UbuntuMono-R.ttf':";
+		}
+		else if (_closeTextFont.getName().equals("Ubuntu Condensed")) {
+			fontPath ="/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-C.ttf':";
+		}
+		else {
+			fontPath ="/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-R.ttf':";
+		}
+		cmd.append(fontPath);
+		
+		try {
+			_closeTempFile = new File("closeTempFile.txt");
+			_closeTempFile.createNewFile();
+			bw = new BufferedWriter(new FileWriter(_closeTempFile, false));
+			PrintWriter pw = new PrintWriter(bw);
+			
+			//create a string builder to for making the entry string
+			StringBuilder textInformation = new StringBuilder();
+			
+			//closing scene
+			textInformation.append(_closeText);
+			textInformation.append(System.getProperty("line.separator"));
+			
+			//append the entry to the file 
+			pw.append(textInformation.toString());
+			pw.close();
+			bw.close();
+		} catch (IOException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+		
+		cmd.append("textfile='" + _closeTempFile.getAbsolutePath() + "':");
+		cmd.append("x=50:");
+		cmd.append("y=200:");
+		cmd.append("fontsize=" + _closeTextFont.getSize() + ":");
+		
+		String redClose = Integer.toHexString(_closeTextColour.getRed());
+		if (redClose.length() == 1) {
+			redClose = "0" + redClose;
+		}
+		String greenClose = Integer.toHexString(_closeTextColour.getGreen());
+		if (greenClose.length() == 1) {
+			greenClose = "0" + greenClose;
+		}
+		String blueClose = Integer.toHexString(_closeTextColour.getBlue());
+		if (blueClose.length() == 1) {
+			blueClose = "0" + blueClose;
+		}
+		
+		cmd.append("fontcolor=0x" + redClose+greenClose+blueClose + ":");
+		cmd.append("draw='gt(t," + ((int)_timeLength-10) +")':\"");
+		return cmd.toString();
+	}
+	
+	protected void removeTempFile() {
+		if (_closeTempFile.exists()) {
+			_closeTempFile.delete();
+		}
+		if (_openTempFile.exists()) {
+			_openTempFile.delete();
 		}
 	}
 

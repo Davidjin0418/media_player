@@ -111,7 +111,10 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 	private TextFilterWorker _currentTextWorker = null;
 	private PreviewWorker _currentPreviewWorker = null;
 	
-	public TextFrame() {
+	private JButton _btnAddText;
+	
+	public TextFrame(JButton btnAddText) {
+		_btnAddText = btnAddText;
 		createAndShowGui();
 	};
 	
@@ -505,14 +508,19 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 				
 				if (yn == 0) {
 					_currentTextWorker.cancel(true);
+					this._btnAddText.setEnabled(true);
 					this.dispose();
+					
 				}
 			}
 			else {
+				this._btnAddText.setEnabled(true);
 				this.dispose();
+				
 			}
 		}
 		else {
+			this._btnAddText.setEnabled(true);
 			this.dispose();
 		}
 	}
