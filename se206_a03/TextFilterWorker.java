@@ -18,18 +18,19 @@ import javax.swing.SwingWorker;
 
 public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 	
-	File _videoFile;
-	JProgressBar _bar;
-	Font _openTextFont;
-	Color _openTextColour;
+	protected File _videoFile;
+	protected JProgressBar _bar;
+	protected Font _openTextFont;
+	protected Color _openTextColour;
 	
-	Font _closeTextFont;
-	Color _closeTextColour;
+	protected Font _closeTextFont;
+	protected Color _closeTextColour;
 	
-	String _openText;
-	String _closeText;
-	JButton _button;
-	int _exitStatus;
+	protected String _openText;
+	protected String _closeText;
+	protected JButton _button;
+	protected int _exitStatus;
+	private double _timeLength;
 	
 	public TextFilterWorker(File file , JProgressBar progress, JTextPane _textForOpen, JTextPane _textForClose, JButton _okButton) {
 		_videoFile = file;
@@ -44,16 +45,115 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 		_button = _okButton;
 	}
 
+	public TextFilterWorker() {
+		// TODO Auto-generated constructor stub
+	}
+
 	@Override
 	protected Integer doInBackground() throws Exception {
 		// TODO Auto-generated method stub
 		//command to get the duration
+		parseDuration();
+		
+		//command to process the video
+		StringBuilder cmd  = new StringBuilder("avconv ");		
+		//path to input file, textfilter for open scene
+		cmd. append(" -y -i " + "\"" + _videoFile.getAbsolutePath() + "\"" + " -vf \"drawtext=fontfile='");
+		
+		cmd.append(this.createTextParameter());
+		//using the same audio from the source file so don't need to re encode the audio file again.
+		cmd.append(" -c:a copy ");
+		
+		cmd.append("\"[TEXTFILTER]" + _videoFile.getName() +"\"");
+		ProcessBuilder builder = new ProcessBuilder("/bin/bash", "-c", cmd.toString());
+		builder.redirectErrorStream(true);
+		
+		Process process;
+		try {
+			
+			process = builder.start();
+
+			//getting the input stream to read the command output
+			InputStream stdout = process.getInputStream();		
+			BufferedReader stdoutBuffered = new BufferedReader(new InputStreamReader(stdout));
+			String line;
+			String duration = null;
+			String progress = null;
+			double bitrate = 0;
+			double currentSize = 0;
+			//22 character (0 -21 index)
+			Pattern durationPat = Pattern.compile("Duration:\\s(\\d\\d):(\\d\\d):(\\d\\d.\\d\\d),");
+			Pattern progressPat = Pattern.compile("L?size=\\s*(\\d*)kB\\stime=\\d*.\\d*\\sbitrate=\\s(\\d*.\\d)kbits/s");
+			
+
+			// time[s]*bitrate[kbps] = size[MB]
+			while ((line = stdoutBuffered.readLine()) != null  && !isCancelled()) {
+				
+				Matcher progressMatcher = progressPat.matcher(line);
+				if (progressMatcher.find()) {
+					progress = progressMatcher.group(0);
+					currentSize = Double.parseDouble(progressMatcher.group(1)) / 1024;
+					bitrate = Double.parseDouble(progressMatcher.group(2));
+					double finalSize = _timeLength*bitrate /(8*1024);
+					double percentage = (currentSize/finalSize)*100;
+					publish((int)percentage);
+					
+				}
+				
+				
+				
+				//System.out.println(line);
+			}
+			
+			
+			if (!isCancelled()) {
+				_exitStatus = process.waitFor();
+			}
+			
+			process.getInputStream().close();
+	        process.getOutputStream().close();
+	        process.getErrorStream().close();
+	        process.destroy();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	
+	public void done() {
+		if (!isCancelled()) {
+			if (_exitStatus == 0) {
+				_bar.setValue(100);
+				_bar.setString("Done");
+			}
+			else {
+				//need indicate to the user. 
+			}	
+		}
+		else {
+			_bar.setValue(0);
+			_bar.setString("Cancelled");
+		}
+		_button.setEnabled(true);
+		
+	}
+	
+	public void process(List<Integer> n) {
+		for (Integer currentPercentage : n) {
+			_bar.setValue(currentPercentage);
+			_bar.setString(currentPercentage + "%");
+		}
+	}
+	
+	protected void parseDuration () {
 		StringBuilder durationCmd = new StringBuilder("avconv");
 		durationCmd.append(" -i " + "\""+ _videoFile.getAbsolutePath() + "\"");
 		
 		ProcessBuilder dBuilder = new ProcessBuilder("/bin/bash", "-c", durationCmd.toString());
 		dBuilder.redirectErrorStream(true);
-		double timeLength = 0;
+		_timeLength = 0;
 		Process dProcess;
 		try {
 			
@@ -76,7 +176,7 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 					double minute = Double.parseDouble(durationMatcher.group(2));
 					double hour = Double.parseDouble(durationMatcher.group(1));
 					
-					timeLength = (3600*hour) + (60*minute) + second;
+					_timeLength = (3600*hour) + (60*minute) + second;
 				}
 			}
 			
@@ -88,13 +188,10 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		
-		
-		//command to process the video
-		StringBuilder cmd  = new StringBuilder("avconv ");		
-		//path to input file, textfilter for open scene
-		cmd. append(" -y -i " + "\"" + _videoFile.getAbsolutePath() + "\"" + " -vf \"drawtext=fontfile='");
+	}
+	
+	protected String createTextParameter() {
+		StringBuilder cmd = new StringBuilder();
 		String fontPath;
 		if (_openTextFont.getName().equals("Ubuntu Light")) {
 			fontPath ="/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-L.ttf':";
@@ -170,92 +267,8 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 		}
 		
 		cmd.append("fontcolor=0x" + redClose+greenClose+blueClose + ":");
-		cmd.append("draw='gt(t," + ((int)timeLength-10) +")':\"");
-		
-		//using the same audio from the source file so don't need to re encode the audio file again.
-		cmd.append(" -c:a copy ");
-		
-		cmd.append("\"[TEXTFILTER]" + _videoFile.getName() +"\"");
-		ProcessBuilder builder = new ProcessBuilder("/bin/bash", "-c", cmd.toString());
-		builder.redirectErrorStream(true);
-		
-		Process process;
-		try {
-			
-			process = builder.start();
-
-			//getting the input stream to read the command output
-			InputStream stdout = process.getInputStream();		
-			BufferedReader stdoutBuffered = new BufferedReader(new InputStreamReader(stdout));
-			String line;
-			String duration = null;
-			String progress = null;
-			double bitrate = 0;
-			double currentSize = 0;
-			//22 character (0 -21 index)
-			Pattern durationPat = Pattern.compile("Duration:\\s(\\d\\d):(\\d\\d):(\\d\\d.\\d\\d),");
-			Pattern progressPat = Pattern.compile("L?size=\\s*(\\d*)kB\\stime=\\d*.\\d*\\sbitrate=\\s(\\d*.\\d)kbits/s");
-			
-
-			// time[s]*bitrate[kbps] = size[MB]
-			while ((line = stdoutBuffered.readLine()) != null  && !isCancelled()) {
-				
-				Matcher progressMatcher = progressPat.matcher(line);
-				if (progressMatcher.find()) {
-					progress = progressMatcher.group(0);
-					currentSize = Double.parseDouble(progressMatcher.group(1)) / 1024;
-					bitrate = Double.parseDouble(progressMatcher.group(2));
-					double finalSize = timeLength*bitrate /(8*1024);
-					double percentage = (currentSize/finalSize)*100;
-					publish((int)percentage);
-					
-				}
-				
-				
-				
-				//System.out.println(line);
-			}
-			
-			
-			if (!isCancelled()) {
-				_exitStatus = process.waitFor();
-			}
-			
-			process.getInputStream().close();
-	        process.getOutputStream().close();
-	        process.getErrorStream().close();
-	        process.destroy();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		return null;
-	}
-	
-	public void done() {
-		if (!isCancelled()) {
-			if (_exitStatus == 0) {
-				_bar.setValue(100);
-				_bar.setString("Done");
-			}
-			else {
-				//need indicate to the user. 
-			}	
-		}
-		else {
-			_bar.setValue(0);
-			_bar.setString("Cancelled");
-		}
-		_button.setEnabled(true);
-		
-	}
-	
-	public void process(List<Integer> n) {
-		for (Integer currentPercentage : n) {
-			_bar.setValue(currentPercentage);
-			_bar.setString(currentPercentage + "%");
-		}
+		cmd.append("draw='gt(t," + ((int)_timeLength-10) +")':\"");
+		return cmd.toString();
 	}
 
 }
