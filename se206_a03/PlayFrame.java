@@ -7,6 +7,7 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import uk.co.caprica.vlcj.component.EmbeddedMediaPlayerComponent;
 
@@ -14,8 +15,10 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 
 import javax.swing.JButton;
 import javax.swing.ImageIcon;
@@ -39,10 +42,8 @@ public class PlayFrame extends JFrame implements ActionListener {
     private JButton btnForward;
     private JButton btnBackward;
     private JButton btnPlay;
-    private JButton btnStrip;
     private JButton btnMute;
-    private JButton btnOverlay;
-    private JButton btnReplace;
+    private JButton btnEdit;
     private JSlider Time;
     private JSlider volume;
     
@@ -98,29 +99,20 @@ public class PlayFrame extends JFrame implements ActionListener {
         btnBackward.addActionListener(this);
         contentPane.add(btnBackward);
         
-        btnStrip = new JButton("Strip");
-        btnStrip.setFont(new Font("Lucida Bright", Font.BOLD, 10));
-        btnStrip.addActionListener(this);
-        btnStrip.setBounds(514, 350, 70, 70);
-        contentPane.add(btnStrip);
-        
+      
         btnMute = new JButton("Mute");
         btnMute.setFont(new Font("Lucida Bright", Font.BOLD, 10));
         btnMute.addActionListener(this);
         btnMute.setBounds(331, 350, 70, 70);
         contentPane.add(btnMute);
         
-        btnOverlay = new JButton("Overlay");
-        btnOverlay.setFont(new Font("Lucida Bright", Font.BOLD, 10));
-        btnOverlay.addActionListener(this);
-        btnOverlay.setBounds(586, 350, 70, 70);
-        contentPane.add(btnOverlay);
+        btnEdit = new JButton("Edit Video");
+        btnEdit.setFont(new Font("Lucida Bright", Font.BOLD, 10));
+        btnEdit.addActionListener(this);
+        btnEdit.setBounds(586, 350, 70, 70);
+        contentPane.add(btnEdit);
         
-        btnReplace = new JButton("Replace");
-        btnReplace.setFont(new Font("Lucida Bright", Font.BOLD, 10));
-        btnReplace.addActionListener(this);
-        btnReplace.setBounds(668, 350, 80, 70);
-        contentPane.add(btnReplace);
+      
         
         mediaPlayerComponent = new EmbeddedMediaPlayerComponent();
         panel.setVisible(true);
@@ -156,9 +148,11 @@ public class PlayFrame extends JFrame implements ActionListener {
         }
     }
     public String chooseFileName(){
+    	String path=choosePath();
         String outputFileName = JOptionPane
         .showInputDialog("Please enter the output file name");
         File f=new File(outputFileName);
+        //check if file exists
         if (f.exists()){
             String[] options = { "Yes", "Cancel" };
             int selection = JOptionPane
@@ -171,7 +165,7 @@ public class PlayFrame extends JFrame implements ActionListener {
                               JOptionPane.WARNING_MESSAGE, null,
                               options, options[0]);
             if (selection == 0) {
-                return outputFileName;
+                return path+"/"+outputFileName;
             } else {
                 JOptionPane
                 .showMessageDialog(this,
@@ -181,10 +175,27 @@ public class PlayFrame extends JFrame implements ActionListener {
             }
         }
         else {
-            return outputFileName;
+            return path+"/"+outputFileName;
         }
     }
- 
+    public String choosePath(){
+    	 // get from http://www.rgagnon.com/javadetails/java-0370.html choose
+        // a directory to save file
+        JFileChooser chooser = new JFileChooser();
+        chooser.setCurrentDirectory(new java.io.File("."));
+        chooser.setDialogTitle("Chose a diretory");
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        //
+        // disable the "All files" option.
+        //
+        chooser.setAcceptAllFileFilterUsed(false);
+        // path default to root directory
+        String path ="/";
+        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION){
+        	path = chooser.getSelectedFile().getAbsolutePath();
+        }
+        return path;
+    }
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == btnPlay) {
@@ -201,116 +212,112 @@ public class PlayFrame extends JFrame implements ActionListener {
             mediaPlayerComponent.getMediaPlayer().skip(-10000);
         } else if (e.getSource() == btnMute) {
             mediaPlayerComponent.getMediaPlayer().mute();
-        } else if (e.getSource() == btnOverlay) {
-            
-        } else if (e.getSource() == btnReplace) {
-            
-        } else if (e.getSource() == btnStrip) {
-            // get from http://www.rgagnon.com/javadetails/java-0370.html choose
-            // a directory to save file
-            JFileChooser chooser = new JFileChooser();
-            chooser.setCurrentDirectory(new java.io.File("."));
-            chooser.setDialogTitle("Chose a diretory to save audio file");
-            chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            //
-            // disable the "All files" option.
-            //
-            chooser.setAcceptAllFileFilterUsed(false);
-            //
-            String path = "";
-            if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-                path = chooser.getSelectedFile().getAbsolutePath();
-                String outputFileName=chooseFileName();
-                //extract the audio file from video,need to judge if audio exists in video file
-                String cmd = "avconv -i " + Main.file +" "
-                + path + "/" + outputFileName;
-                ProcessBuilder pb = new ProcessBuilder("bash", "-c", cmd);
-                pb.redirectErrorStream(true);
-                try {
-                    Process process = pb.start();
-                    int exit = process.waitFor();
-                    if (exit == 0) {
-                        JOptionPane
-                        .showMessageDialog(this,
-                                           "Strip successfully");
-                        //choose to play the original file or striped file
-                        
-                        
-                    }
-                } catch (IOException e1) {
-                    // TODO Auto-generated catch block
-                    e1.printStackTrace();
-                } catch (InterruptedException e1) {
-                    // TODO Auto-generated catch block
-                    e1.printStackTrace();
-                }
-            }
-            
-        }
-    }
-
-
-    
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		if (e.getSource() == btnPlay) {
-			//play the media.
-			mediaPlayerComponent.getMediaPlayer().play();
-		} else if (e.getSource() == btnPause) {
-			//pause the media.
-			mediaPlayerComponent.getMediaPlayer().pause();
-		} else if (e.getSource() == btnForward) {
-			// need to keep forward or backward
-			mediaPlayerComponent.getMediaPlayer().skip(10000);
-		} else if (e.getSource() == btnBackward) {
-			mediaPlayerComponent.getMediaPlayer().skip(-10000);
-		} else if (e.getSource() == btnMute) {
-			mediaPlayerComponent.getMediaPlayer().mute();
-		} else if (e.getSource() == btnOverlay) {
-               
-		} else if (e.getSource() == btnReplace) {
-             
-		} else if (e.getSource() == btnStrip) {
-			String outputFileName = JOptionPane
-					.showInputDialog("Please enter the output file name");
-			// get from http://www.rgagnon.com/javadetails/java-0370.html choose
-			// a directory to save file
-			JFileChooser chooser = new JFileChooser();
-			chooser.setCurrentDirectory(new java.io.File("."));
-			chooser.setDialogTitle("Chose a diretory to save audio file");
-			chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-			//
-			// disable the "All files" option.
-			//
-			chooser.setAcceptAllFileFilterUsed(false);
-			//
-			String path = "";
-			if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-				path = chooser.getSelectedFile().getAbsolutePath();
-				String cmd = "avconv -i " + Main.file +" "
-						+ path + "/" + outputFileName;
-				ProcessBuilder pb = new ProcessBuilder("bash", "-c", cmd);
-				pb.redirectErrorStream(true);
-				try {
-					Process process = pb.start();
-					int exit = process.waitFor();
-					if (exit == 0) {
-						JOptionPane
-						.showMessageDialog(this,
-								"Strip successfully");
-						//choose to play the original file or striped file
-						
-						
+        } else if (e.getSource() == btnEdit) {
+            if(MainFrame.isAudioVideoFile(Main.file).equals("audio")){
+            	JOptionPane
+                .showMessageDialog(this,
+                                   "Can not edit a audio file");
+            }else{
+            	 String[] options = { "Overlay", "Replace" ,"Strip"};
+                 int selection = JOptionPane
+                 .showOptionDialog(
+                                   null,
+                                   "Which one would you like to do",
+                                   "Option",
+                                   JOptionPane.DEFAULT_OPTION,
+                                   JOptionPane.WARNING_MESSAGE, null,
+                                   options, options[0]);
+                 if(selection ==0){
+                	 try {
+                		 //Overlay
+						overlayAudio();
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
 					}
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				} catch (InterruptedException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-			}
+                     
+                 }else if(selection==1){
+                     //replace
+                 }else{
+                	 try {
+						extractAudio();
+					} catch (IOException | InterruptedException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+                 }
+            }
+        } 
+    }
+    public String chooseFile() throws IOException {
+        //using file chooser ,can only choose file with extension mp3
+        
+        final JFileChooser fc = new JFileChooser();
+        fc.addChoosableFileFilter(new FileNameExtensionFilter("Audio/mp3", "mp3"));
+        fc.setAcceptAllFileFilterUsed(false);
+        int returnVal = fc.showOpenDialog(PlayFrame.this);
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            File file = fc.getSelectedFile();
+           
+            if ( MainFrame.isAudioVideoFile(file).equals("audio")) {
+            	return file.getAbsolutePath();
+            } else {
+                JOptionPane.showMessageDialog(this,
+                                              "ERROR: " + file.getName()
+                                             + " does not refer to a valid audio file");
+                chooseFile();           
+                
+            }
+        }
+		return null;
 
+    }
+    public void overlayAudio() throws IOException{
+    	String inputAudio=chooseFile();
+    	String cmd="avconv -i "+Main.file+" -i "+inputAudio+" -c copy test.avi";
+    	ProcessBuilder pb = new ProcessBuilder("bash", "-c", cmd);
+        pb.redirectErrorStream(true);
+        Process process = pb.start();
+        BufferedReader stdout = new BufferedReader(
+				new InputStreamReader(process.getInputStream()));
+		String line;
+		while ((line = stdout.readLine()) != null) {
+
+			System.out.println(line);
 		}
-	}
+    }
+    public void extractAudio() throws IOException, InterruptedException{
+    	String outputFileName=chooseFileName();
+    	String cmd = "avconv -i " + Main.file +" "
+                + outputFileName;
+    	 ProcessBuilder pb = new ProcessBuilder("bash", "-c", cmd);
+         pb.redirectErrorStream(true);
+         Process process = pb.start();
+         BufferedReader stdout = new BufferedReader(
+					new InputStreamReader(process.getInputStream()));
+			String line;
+			while ((line = stdout.readLine()) != null) {
+	
+				System.out.println(line);
+			}
+         int exit =process.waitFor();
+         if(exit==0){
+        	 JOptionPane
+             .showMessageDialog(this,
+                                "Strip successfully");
+         }else{
+        	 JOptionPane
+             .showMessageDialog(this,
+                                "Error");
+         }
+         
+         
+        
+    }
+    public void stripAudio(){
+    	
+    }
+//if close the media ,the play should stop
+
+
 }
