@@ -300,7 +300,7 @@ public class MainFrame extends JFrame implements ActionListener {
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             File file = fc.getSelectedFile();
            
-            if ( isAudioVideoFile(file).equals("audio") | isAudioVideoFile(file).equals("video") ) {
+            if ( isAudioVideoFile(file).equals("audio") || isAudioVideoFile(file).equals("video") ) {
             	Main.file = file;
                 currentFIle.setText(Main.file.getCanonicalPath() + " is chosen");
             } else {
@@ -322,7 +322,7 @@ public class MainFrame extends JFrame implements ActionListener {
      * Return "other" if the file is other file type
      */
     public static String isAudioVideoFile(File file) {
-        String s = "file --mime-type " + file.getPath();
+        String s = "file --mime-type " + "\"" +file.getAbsolutePath() +"\"";
         ProcessBuilder pb = new ProcessBuilder("bash", "-c", s);
         pb.redirectErrorStream(true);
         Process process;
@@ -332,7 +332,9 @@ public class MainFrame extends JFrame implements ActionListener {
 	        String out = stdout.readLine();
 	      	//used java regex to see if the output from file command contain video or audio
 	        //then store it into a  variable to use it.
-	        Pattern fileTypePattern = Pattern.compile(file.getAbsolutePath()+": (audio|video)/.*");
+	        String path = file.getAbsolutePath().replace("(", "\\(");
+	        path = path.replace(")", "\\)");
+	        Pattern fileTypePattern = Pattern.compile(path + ": (audio|video)/.*");
 	        Matcher patternMatcher = fileTypePattern.matcher(out);
 	        if (patternMatcher.find()) {
 	        	return patternMatcher.group(1);
