@@ -2,6 +2,8 @@ VAMIX Version 1.0 /25/09/2014
 
 PLEASE READ THE INSTRUCTION BELOW BEFORE USING VAMIX !!!!!!!
 
+HOW TO RUN IT: jar file ?
+
 ------------------------
 MAIN WINDOW INSTRUCTION 
 ------------------------
@@ -100,7 +102,7 @@ THE FOLLOWING OPERATIONS ONLY APPLIES TO VIDEO FILE
 
 -Strip: This function will strip out the audio from the video file and the output will a video file with no audio. It will allows you to choose where to save the output file and the name of the output file.
 
--Extract: This function will extract the audio from the video file and output as mp3 file. It will alows you to choose where to save the output file and the name of the output file
+-Extract: This function will extract the audio from the video file and output as mp3 file. It will alow you to choose where to save the output file and the name of the output file
 
 
 
