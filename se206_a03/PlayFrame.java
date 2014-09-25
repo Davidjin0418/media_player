@@ -61,30 +61,23 @@ public class PlayFrame extends JFrame implements ActionListener {
 	private BackwardFarwardWorker skipworker;
 	private VideoWorker videoworker;
 	private Timer timer;
-<<<<<<< HEAD
+
 	private JLabel lblProgress;
 	private boolean volumeEnable;
-=======
+
 	private JButton btnMainFramePlay;
 	
 	private boolean isAutomaticSlide = false;
->>>>>>> 83adfcadeb8ffa8c86a4d1766a68b7ec67db49de
-
 	/**
 	 * Create the frame.
 	 * @param btnPlay2 
 	 */
-<<<<<<< HEAD
-	public PlayFrame() {
-		// initialize the workers
-		videoworker = new VideoWorker("");
-=======
+
 	public PlayFrame(JButton btn) {
 		
 		btnMainFramePlay = btn;
 		//initialize the workers
 		videoworker=new VideoWorker("");
->>>>>>> 83adfcadeb8ffa8c86a4d1766a68b7ec67db49de
 		videoworker.cancel(true);
 		skipworker = new BackwardFarwardWorker(0);
 		//for vlcj
@@ -260,9 +253,6 @@ public class PlayFrame extends JFrame implements ActionListener {
 		time.addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(ChangeEvent e) {
-<<<<<<< HEAD
-				mediaPlayerComponent.getMediaPlayer().setTime(time.getValue());
-=======
 			if (isAutomaticSlide == false) {
 				mediaPlayerComponent.getMediaPlayer().setTime(
 					time.getValue());
@@ -270,7 +260,6 @@ public class PlayFrame extends JFrame implements ActionListener {
 			else {
 				isAutomaticSlide = false;
 			}
->>>>>>> 83adfcadeb8ffa8c86a4d1766a68b7ec67db49de
 			}
 		});
 
@@ -298,15 +287,9 @@ public class PlayFrame extends JFrame implements ActionListener {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
-<<<<<<< HEAD
-				if (time.getValue() < time.getMaximum()) {
-					time.setValue((int) mediaPlayerComponent.getMediaPlayer()
-							.getTime());
-=======
 				if(time.getValue()<time.getMaximum()){
 					time.setValue((int)mediaPlayerComponent.getMediaPlayer().getTime());
 					isAutomaticSlide = true;
->>>>>>> 83adfcadeb8ffa8c86a4d1766a68b7ec67db49de
 				}
 			}
 
@@ -314,16 +297,13 @@ public class PlayFrame extends JFrame implements ActionListener {
 		volumeEnable = true;
 		this.addWindowListener(new java.awt.event.WindowAdapter() {
 			public void windowClosing(java.awt.event.WindowEvent windowEvent) {
-<<<<<<< HEAD
 				// if the media is muted before closing ,set mute to false
 				// otherwise it would be in mute when
 				// open it next time.
 				if (mediaPlayerComponent.getMediaPlayer().isMute()) {
 					mediaPlayerComponent.getMediaPlayer().mute(false);
 				}
-=======
 				btnMainFramePlay.setEnabled(true);
->>>>>>> 83adfcadeb8ffa8c86a4d1766a68b7ec67db49de
 				mediaPlayerComponent.getMediaPlayer().stop();
 				videoworker.cancel(true);
 			}
