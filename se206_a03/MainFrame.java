@@ -6,6 +6,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
 import javax.swing.SwingWorker;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -32,6 +33,7 @@ import java.util.regex.Pattern;
 
 import javax.swing.JProgressBar;
 import javax.swing.SwingConstants;
+import java.awt.Dimension;
 
 
 public class MainFrame extends JFrame implements ActionListener, WindowListener {
@@ -53,70 +55,89 @@ public class MainFrame extends JFrame implements ActionListener, WindowListener 
      * @throws IOException 
      */
     public MainFrame() throws IOException {
+    	
+    	JTabbedPane mainTabPane = new JTabbedPane();
+    	JPanel downloadPanel = new JPanel();
+    	
+    	downloadPanel.setBackground(new Color(238,238,238));
+    	downloadPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+    	downloadPanel.setLayout(null);
         setTitle("Welcome to VAMIX");
-       
-        this.addWindowListener(this);
         
-        setBounds(100, 100, 450, 300);
+        this.addWindowListener(this);
         mainPane = new JPanel();
         mainPane.setBackground(new Color(238, 238, 238));
         mainPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-        setContentPane(mainPane);
+        //setContentPane(mainPane);
+        setContentPane(mainTabPane);
         mainPane.setLayout(null);
         
-        JLabel lblEnterTheUrl = new JLabel("Enter the URL to download:");
-        lblEnterTheUrl.setBounds(5, 5, 200, 16);
-        mainPane.add(lblEnterTheUrl);
+        mainTabPane.add("Main",mainPane);
+        mainTabPane.add("Download", downloadPanel);
         
         downloadURL = new JTextField();
-        downloadURL.setBounds(5, 26, 272, 28);
+        downloadURL.setBounds(13, 32, 259, 28);
         downloadURL.setColumns(10);
-        mainPane.add(downloadURL);
+        downloadPanel.add(downloadURL);
         
         btnStartDownload = new JButton("Start download");
         btnStartDownload.addActionListener(this);
-        btnStartDownload.setBounds(282, 26, 175, 29);
-        mainPane.add(btnStartDownload);
+        
+        JLabel lblEnterTheUrl = new JLabel("Enter the URL to download:");
+        lblEnterTheUrl.setBounds(12, 12, 200, 16);
+        downloadPanel.add(lblEnterTheUrl);
+        btnStartDownload.setBounds(275, 31, 175, 29);
+        downloadPanel.add(btnStartDownload);
+        
+        JLabel lblDownloadProgress = new JLabel("Download Progress:");
+        lblDownloadProgress.setBounds(12, 72, 150, 20);
+        downloadPanel.add(lblDownloadProgress);
+        
+        progressBar = new JProgressBar();
+        //original width 146
+        progressBar.setBounds(167, 72, 284, 20);
+        progressBar.setMinimum(0);
+        progressBar.setMaximum(100);
+        progressBar.setStringPainted(true);
+        progressBar.setString("");
+        downloadPanel.add(progressBar);
        
         
         JLabel lblTheCurrentFile = new JLabel("The current file is:");
-        lblTheCurrentFile.setBounds(6, 88, 200, 16);
+        //lblTheCurrentFile.setBounds(6, 88, 200, 16);
+        lblTheCurrentFile.setBounds(12, 12, 200, 16);
         mainPane.add(lblTheCurrentFile);
         
         currentFIle = new JTextField();
-        currentFIle.setBounds(5, 116, 272, 28);
+        //currentFIle.setBounds(5, 116, 272, 28);
+        currentFIle.setBounds(13, 32, 302, 28);
         currentFIle.setColumns(10);
         mainPane.add(currentFIle);
         
         btnChooseAFile = new JButton("Choose a file");
         btnChooseAFile.addActionListener(this);
-        btnChooseAFile.setBounds(282, 116, 126, 29);
+        //btnChooseAFile.setBounds(282, 116, 126, 29);
+        btnChooseAFile.setBounds(327, 31, 126, 29);
         mainPane.add(btnChooseAFile);
         
         btnPlay = new JButton("Play");
         btnPlay.addActionListener(this);
-        btnPlay.setBounds(97, 156, 75, 29);
+        //btnPlay.setBounds(97, 156, 75, 29);
+        btnPlay.setBounds(137, 72, 75, 29);
         mainPane.add(btnPlay);
         
         btnAddText = new JButton("Add Text");
         btnAddText.addActionListener(this);
-        btnAddText.setBounds(247, 156, 101, 29);
+        //btnAddText.setBounds(247, 156, 101, 29);
+        btnAddText.setBounds(247, 72, 101, 29);
         mainPane.add(btnAddText);
         
-        progressBar = new JProgressBar();
-        //original width 146
-        progressBar.setBounds(155, 60, 170, 20);
-        progressBar.setMinimum(0);
-        progressBar.setMaximum(100);
-        progressBar.setStringPainted(true);
-        progressBar.setString("");
-        mainPane.add(progressBar);
-        
-        JLabel lblDownloadProgress = new JLabel("Download Progress:");
-        lblDownloadProgress.setBounds(5, 60, 150, 20);
-        mainPane.add(lblDownloadProgress);
         
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        this.setSize(new Dimension(482, 171));
+        this.setPreferredSize(new Dimension(482, 171));
+		this.setResizable(false);
+        this.setVisible(true);
     }
     
     @Override
@@ -144,7 +165,8 @@ public class MainFrame extends JFrame implements ActionListener, WindowListener 
         } else if (arg0.getSource() == btnPlay) {
             //create a play frame window.
         	if (Main.file !=null ) {
-        		PlayFrame playframe=new PlayFrame();
+        		PlayFrame playframe=new PlayFrame(btnPlay);
+        		btnPlay.setEnabled(false);
         	}
         } else if (arg0.getSource() == btnStartDownload) {
         	if (isDownloading == false) {
@@ -417,7 +439,7 @@ public class MainFrame extends JFrame implements ActionListener, WindowListener 
 	public void windowClosing(WindowEvent e) {
 		// TODO Auto-generated method stub
 		if (isDownloading == false) {
-			if (this.btnAddText.isEnabled() == false) {
+			if (this.btnAddText.isEnabled() == false | this.btnPlay.isEnabled()== false) {
 				int yn = JOptionPane.showConfirmDialog(this,
 					    "Closing this window will close Play Frame or Text Editing Frame as well, do you want to continue ?",
 					    "Warning",

@@ -22,9 +22,5 @@ public class Main {
 	    } 
 		public static void createGUI() throws IOException{
 			MainFrame mainFrame=new MainFrame();
-			mainFrame.setTitle("Welcome to VAMIX");
-			mainFrame.setSize(500, 400);
-			mainFrame.setVisible(true);
-			mainFrame.setResizable(false);
 		}
 }

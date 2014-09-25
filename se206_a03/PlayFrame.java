@@ -56,13 +56,17 @@ public class PlayFrame extends JFrame implements ActionListener {
 	private BackwardFarwardWorker skipworker;
 	private VideoWorker videoworker;
 	private Timer timer;
+	private JButton btnMainFramePlay;
 	
 	private boolean isAutomaticSlide = false;
 
 	/**
 	 * Create the frame.
+	 * @param btnPlay2 
 	 */
-	public PlayFrame() {
+	public PlayFrame(JButton btn) {
+		
+		btnMainFramePlay = btn;
 		//initialize the workers
 		videoworker=new VideoWorker("");
 		videoworker.cancel(true);
@@ -192,6 +196,7 @@ public class PlayFrame extends JFrame implements ActionListener {
         
 		this.addWindowListener(new java.awt.event.WindowAdapter() {
 			public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+				btnMainFramePlay.setEnabled(true);
 				mediaPlayerComponent.getMediaPlayer().stop();
 				videoworker.cancel(true);
 			}
