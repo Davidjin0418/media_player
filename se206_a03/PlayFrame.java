@@ -56,6 +56,8 @@ public class PlayFrame extends JFrame implements ActionListener {
 	private BackwardFarwardWorker skipworker;
 	private VideoWorker videoworker;
 	private Timer timer;
+	
+	private boolean isAutomaticSlide = false;
 
 	/**
 	 * Create the frame.
@@ -161,8 +163,13 @@ public class PlayFrame extends JFrame implements ActionListener {
 		time.addChangeListener(new ChangeListener(){
 			@Override
 			public void stateChanged(ChangeEvent e) {
+			if (isAutomaticSlide == false) {
 				mediaPlayerComponent.getMediaPlayer().setTime(
-						time.getValue());
+					time.getValue());
+			}
+			else {
+				isAutomaticSlide = false;
+			}
 			}
 		});
 		
@@ -177,6 +184,7 @@ public class PlayFrame extends JFrame implements ActionListener {
 				// TODO Auto-generated method stub
 				if(time.getValue()<time.getMaximum()){
 					time.setValue((int)mediaPlayerComponent.getMediaPlayer().getTime());
+					isAutomaticSlide = true;
 				}
 			}
         	
@@ -390,11 +398,13 @@ public class PlayFrame extends JFrame implements ActionListener {
 		protected Void doInBackground() throws Exception {
 			if (options == 0) {
 				while (!this.isCancelled()) {
-					mediaPlayerComponent.getMediaPlayer().skip(50);
+					Thread.sleep(100);
+					mediaPlayerComponent.getMediaPlayer().skip(500);
 				}
 			} else if (options == 1) {
 				while (!this.isCancelled()) {
-					mediaPlayerComponent.getMediaPlayer().skip(-50);
+					Thread.sleep(100);
+					mediaPlayerComponent.getMediaPlayer().skip(-500);
 				}
 			}
 			return null;
