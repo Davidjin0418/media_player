@@ -91,7 +91,6 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 	private JSpinner _closeFontSizeSpinner;
 	private JButton _closeColourButton;	
 	
-	
 	private JLabel _openfontStyleLabel;
 	private JLabel _openfontSizeLabel;
 	
@@ -131,6 +130,7 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 		
 		JPanel confirmationPanel = new JPanel();
 		confirmationPanel.setLayout(new FlowLayout(FlowLayout.TRAILING));
+		
 		
 		//preferredSize width=495, height 210
 		_textForOpen = new JTextPane();
@@ -418,8 +418,7 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 			
 		}
 		else if (e.getSource() == _saveTextButton) {
-			
-			File textConfigFile = new File("[TEXTCONFIG]["+ Main.file.getName()+"].txt");
+			File textConfigFile = new File(System.getProperty("user.home")+"/.vamix/[TEXTCONFIG]["+ Main.file.getName()+"].txt");
 			if (!textConfigFile.exists()){
 				try {
 					textConfigFile.createNewFile();
@@ -541,7 +540,7 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 	public void windowDeactivated(WindowEvent e) {}
 
 	private void checkTextSetting (){
-		File settingFile = new File("[TEXTCONFIG]["+ Main.file.getName() +"].txt");
+		File settingFile = new File(System.getProperty("user.home")+"/.vamix/[TEXTCONFIG]["+ Main.file.getName()+"].txt");
 		if (settingFile.exists()) {
 			try {
 				

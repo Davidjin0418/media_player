@@ -105,10 +105,7 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 					publish((int)percentage);
 					
 				}
-				
-				
-				
-				//System.out.println(line);
+	
 			}
 			
 			
@@ -242,8 +239,8 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 			e2.printStackTrace();
 		}
 		cmd.append("textfile='" + _openTempFile.getAbsolutePath() + "':");
-		cmd.append("x=50:");
-		cmd.append("y=50:");
+		cmd.append("x=((W/2)-(W/4)):");
+		cmd.append("y=((H/2)-(h/2)):");
 		cmd.append("fontsize=" + _openTextFont.getSize() + ":");
 
 		String red = Integer.toHexString(_openTextColour.getRed());

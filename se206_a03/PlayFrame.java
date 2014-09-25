@@ -659,7 +659,6 @@ public class PlayFrame extends JFrame implements ActionListener {
 
 			// time[s]*bitrate[kbps] = size[MB]
 			while ((line = stdoutBuffered.readLine()) != null && !isCancelled()) {
-                
 				Matcher progressMatcher = progressPat.matcher(line);
 				if (progressMatcher.find()) {
 					currentSize = Double.parseDouble(progressMatcher.group(1)) / 1024;
@@ -670,7 +669,6 @@ public class PlayFrame extends JFrame implements ActionListener {
 					publish((int) percentage);
 
 				}
-				System.out.println(line);
 			}
 			if (!isCancelled()) {
 				exitStatus = process.waitFor();

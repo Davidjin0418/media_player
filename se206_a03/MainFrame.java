@@ -55,7 +55,7 @@ public class MainFrame extends JFrame implements ActionListener, WindowListener 
      * @throws IOException 
      */
     public MainFrame() throws IOException {
-    	
+    	this.initialisation();
     	JTabbedPane mainTabPane = new JTabbedPane();
     	JPanel downloadPanel = new JPanel();
     	
@@ -342,6 +342,12 @@ public class MainFrame extends JFrame implements ActionListener, WindowListener 
         }
     }
     
+    private void initialisation() {
+		File file = new File(System.getProperty("user.home")+"/.vamix");
+		if (!file.exists()) {
+			file.mkdir();
+		}
+	}
     
     /**
      * Checking if the file is audio or video file
