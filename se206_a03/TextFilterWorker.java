@@ -33,12 +33,14 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 	protected String _closeText;
 	protected JButton _button;
 	protected int _exitStatus;
-	private double _timeLength;
+	protected double _timeLength;
 	
     protected File _closeTempFile;
     protected File _openTempFile;
+    
+    protected File _outputFile;
 	
-	public TextFilterWorker(File file , JProgressBar progress, JTextPane _textForOpen, JTextPane _textForClose, JButton _okButton) {
+	public TextFilterWorker(File file , JProgressBar progress, JTextPane _textForOpen, JTextPane _textForClose, JButton _okButton, File outputFile) {
 		_videoFile = file;
 		_bar = progress;
 		_openTextFont = _textForOpen.getFont();
@@ -49,6 +51,7 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 		_closeTextColour = _textForClose.getForeground();
 		_closeText = _textForClose.getText();
 		_button = _okButton;
+		_outputFile = outputFile;
 	}
 
 	public TextFilterWorker() {
@@ -70,7 +73,7 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 		//using the same audio from the source file so don't need to re encode the audio file again.
 		cmd.append(" -c:a copy ");
 		
-		cmd.append("\"[TEXTFILTER]" + _videoFile.getName() +"\"");
+		cmd.append("\"" + _outputFile.getAbsolutePath() + "\"");
 		ProcessBuilder builder = new ProcessBuilder("/bin/bash", "-c", cmd.toString());
 		builder.redirectErrorStream(true);
 		
@@ -301,8 +304,8 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 		}
 		
 		cmd.append("textfile='" + _closeTempFile.getAbsolutePath() + "':");
-		cmd.append("x=50:");
-		cmd.append("y=200:");
+		cmd.append("x=((W/2)-(W/4)):");
+		cmd.append("y=((H/2)+(h/2)):");
 		cmd.append("fontsize=" + _closeTextFont.getSize() + ":");
 		
 		String redClose = Integer.toHexString(_closeTextColour.getRed());

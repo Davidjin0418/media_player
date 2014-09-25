@@ -26,6 +26,8 @@ import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.BorderFactory;
 import javax.swing.GroupLayout;
@@ -33,6 +35,7 @@ import javax.swing.JButton;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JFileChooser;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -52,6 +55,8 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.AbstractDocument;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.BoxView;
@@ -399,8 +404,55 @@ public class TextFrame extends JFrame implements ActionListener, WindowListener 
 			}
 		}
 		else if (e.getSource() == _okButton) {
+			JFileChooser fileChooser = new JFileChooser(){
+				
+				@Override
+				public void approveSelection() {
+					File file = getSelectedFile();
+					
+					//check if the file exist already and ask the user if they want to over write the file
+					if (file.getAbsolutePath().equals(Main.file.getAbsolutePath())) {
+			        	JOptionPane.showMessageDialog(this,
+	                            "ERROR: " 
+	                            + "Cannot overwrite the source file(" + Main.file.getName() + ")");
+			        	return;
+			        }
+			        if(file.exists() && getDialogType() == SAVE_DIALOG){
+			            int result = JOptionPane.showConfirmDialog(this, file.getName() + " already" +
+			            		" exist. Do you want to overwrite ?","OverWrite ?",JOptionPane.YES_NO_OPTION);
+			            switch(result){
+			                case JOptionPane.YES_OPTION:
+			                    super.approveSelection();
+			                    return;
+			                case JOptionPane.NO_OPTION:
+			                    return;
+			                case JOptionPane.CLOSED_OPTION:
+			                    return;
+			            }
+			        }
+			        super.approveSelection();
+				}
+				
+			};
+			//add a mp3 file filter to the file chooser so the user can choose to only see mp3 file
+	
+			fileChooser.setSelectedFile(new File("(TEXTFILTER)" + Main.file.getName()));
+			
+			int returnVal = fileChooser.showSaveDialog(null);
+
+			//the user confirm the selected file, the file will pass onto outputFile ad
+			//the name of the file will be shown on output filed text  field
+			File outputFile;
+			if (returnVal == JFileChooser.APPROVE_OPTION) {
+	
+				File selectedFile = fileChooser.getSelectedFile();
+				outputFile = selectedFile;
+			}
+			else {
+				return;
+			}
 			File file = new File(Main.file.getAbsolutePath());
-			TextFilterWorker worker = new TextFilterWorker(file, _TextProgressBar, _textForOpen, _textForClose, _okButton);
+			TextFilterWorker worker = new TextFilterWorker(file, _TextProgressBar, _textForOpen, _textForClose, _okButton, outputFile);
 			_currentTextWorker = worker;
 			worker.execute();
 			_okButton.setEnabled(false);
