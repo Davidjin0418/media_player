@@ -19,6 +19,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import uk.co.caprica.vlcj.component.EmbeddedMediaPlayerComponent;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
@@ -66,24 +67,26 @@ public class PlayFrame extends JFrame implements ActionListener {
 	private boolean volumeEnable;
 
 	private JButton btnMainFramePlay;
-	
+
 	private boolean isAutomaticSlide = false;
+
 	/**
 	 * Create the frame.
-	 * @param btnPlay2 
+	 * 
+	 * @param btnPlay2
 	 */
 
 	public PlayFrame(JButton btn) {
-		
+
 		btnMainFramePlay = btn;
-		//initialize the workers
-		videoworker=new VideoWorker("");
+		// initialize the workers
+		videoworker = new VideoWorker("");
 		videoworker.cancel(true);
 		skipworker = new BackwardFarwardWorker(0);
-		//for vlcj
+		// for vlcj
 		Native.loadLibrary(RuntimeUtil.getLibVlcLibraryName(), LibVlc.class);
-		
-		//set frame
+
+		// set frame
 		this.setVisible(true);
 		this.setTitle(Main.file.getName());
 
@@ -98,6 +101,7 @@ public class PlayFrame extends JFrame implements ActionListener {
 		btnPlay.setVerticalTextPosition(AbstractButton.BOTTOM);
 		btnPlay.setHorizontalTextPosition(AbstractButton.CENTER);
 		btnPlay.addActionListener(this);
+		//set layout
 		SpringLayout sl_contentPane = new SpringLayout();
 		sl_contentPane.putConstraint(SpringLayout.NORTH, btnPlay, -70,
 				SpringLayout.SOUTH, contentPane);
@@ -205,7 +209,7 @@ public class PlayFrame extends JFrame implements ActionListener {
 		contentPane.add(panel);
 
 		setContentPane(contentPane);
-
+        //set volume bar
 		volume = new JSlider();
 		sl_contentPane.putConstraint(SpringLayout.NORTH, volume, -50,
 				SpringLayout.SOUTH, contentPane);
@@ -249,17 +253,16 @@ public class PlayFrame extends JFrame implements ActionListener {
 		time.setMaximum((int) mediaPlayerComponent.getMediaPlayer()
 				.getMediaMeta().getLength());
 		time.setMinimum(0);
-
+        //set the function of time bar
 		time.addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(ChangeEvent e) {
-			if (isAutomaticSlide == false) {
-				mediaPlayerComponent.getMediaPlayer().setTime(
-					time.getValue());
-			}
-			else {
-				isAutomaticSlide = false;
-			}
+				if (isAutomaticSlide == false) {
+					mediaPlayerComponent.getMediaPlayer().setTime(
+							time.getValue());
+				} else {
+					isAutomaticSlide = false;
+				}
 			}
 		});
 
@@ -287,8 +290,9 @@ public class PlayFrame extends JFrame implements ActionListener {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
-				if(time.getValue()<time.getMaximum()){
-					time.setValue((int)mediaPlayerComponent.getMediaPlayer().getTime());
+				if (time.getValue() < time.getMaximum()) {
+					time.setValue((int) mediaPlayerComponent.getMediaPlayer()
+							.getTime());
 					isAutomaticSlide = true;
 				}
 			}
@@ -315,29 +319,37 @@ public class PlayFrame extends JFrame implements ActionListener {
 	// choose output file name to save it,default by "output"
 	public String chooseOutputFileName() {
 		String path = choosePath();
-		String outputFileName = JOptionPane
-				.showInputDialog("Please enter the output file name","output");
-
-		File f1 = new File(path + "/" + outputFileName+".mp3");
-		File f2 = new File(path + "/" + outputFileName+".mp4");
-		// check if file exists
-		if (f1.exists() || f2.exists()) {
-			String[] options = { "Yes", "Cancel" };
-			int selection = JOptionPane.showOptionDialog(null, outputFileName
-					+ " exists,Do you want to override it?", "Warning",
-					JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
-					null, options, options[0]);
-			if (selection == 0) {
-				return path + "/" + outputFileName;
-			} else {
-				JOptionPane.showMessageDialog(this,
-						"Please choose another output file name");
-				this.chooseOutputFileName();
-				return null;
+		if (path != null) {
+			String outputFileName = JOptionPane.showInputDialog(
+					"Please enter the output file name", "output");
+			if (!(outputFileName == null)) {
+				File f1 = new File(path + "/" + outputFileName + ".mp3");
+				File f2 = new File(path + "/" + outputFileName + ".mp4");
+				// check if file exists
+				if (f1.exists() || f2.exists()) {
+					String[] options = { "Yes", "Cancel" };
+					int selection = JOptionPane.showOptionDialog(null,
+							outputFileName
+									+ " exists,Do you want to override it?",
+							"Warning", JOptionPane.DEFAULT_OPTION,
+							JOptionPane.WARNING_MESSAGE, null, options,
+							options[0]);
+					if (selection == 0) {
+						return path + "/" + outputFileName;
+					} else {
+						JOptionPane.showMessageDialog(this,
+								"Please choose another output file name");
+						return this.chooseOutputFileName();
+						
+					}
+				} else {
+					return path + "/" + outputFileName;
+				}
 			}
-		} else {
-			return path + "/" + outputFileName;
+		}else{
+			return null;
 		}
+		return null;
 	}
 
 	// choose the directory in order to save the file
@@ -355,8 +367,11 @@ public class PlayFrame extends JFrame implements ActionListener {
 		String path = "/";
 		if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
 			path = chooser.getSelectedFile().getAbsolutePath();
+			return path;
+		} else {
+			return null;
 		}
-		return path;
+		
 	}
 
 	@Override
@@ -370,15 +385,17 @@ public class PlayFrame extends JFrame implements ActionListener {
 			cancelWorker();
 			mediaPlayerComponent.getMediaPlayer().pause();
 		} else if (e.getSource() == btnForward) {
+			//keep forward
 			cancelWorker();
 			skipworker = new BackwardFarwardWorker(0);
 			skipworker.execute();
 		} else if (e.getSource() == btnBackward) {
+			//keep backword
 			cancelWorker();
 			skipworker = new BackwardFarwardWorker(1);
 			skipworker.execute();
 		} else if (e.getSource() == btnMute) {
-
+            //mute the media
 			mediaPlayerComponent.getMediaPlayer().mute();
 			volumeEnable = !volumeEnable;
 			volume.setEnabled(volumeEnable);
@@ -399,13 +416,13 @@ public class PlayFrame extends JFrame implements ActionListener {
 									JOptionPane.WARNING_MESSAGE, null, options,
 									options[0]);
 					if (selection == 0) {
-		
+                       //if cancel the video worker 
 						videoworker.cancel(true);
 						editProgressBar.setValue(0);
 						editProgressBar.setString("0%");
 						editVideo();
 					} else {
-						// do nothing
+						//if doesn't cancel, do nothing
 					}
 				} else {
 					editProgressBar.setValue(0);
@@ -428,7 +445,10 @@ public class PlayFrame extends JFrame implements ActionListener {
 			try {
 				// overlay
 				String inputFile = chooseInputAudioFile();
+				if(inputFile!=null){
 				String outputFile = chooseOutputFileName();
+				if(outputFile!=null){
+				//command for overlay
 				cmd = "avconv -y -i "
 						+ "\""
 						+ Main.file.getAbsolutePath()
@@ -439,9 +459,10 @@ public class PlayFrame extends JFrame implements ActionListener {
 						+ "\""
 						+ " -filter_complex amix=inputs=2 -strict experimental "
 						+ "\"" + outputFile + ".mp4" + "\"";
-				System.out.println(cmd);
 				videoworker = new VideoWorker(cmd);
 				videoworker.execute();
+				}
+				}
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -451,7 +472,10 @@ public class PlayFrame extends JFrame implements ActionListener {
 			// replace
 			try {
 				String inputFile = chooseInputAudioFile();
+				if(inputFile!=null){
 				String outputFile = chooseOutputFileName();
+				if(outputFile!=null){
+			    //command for replace
 				cmd = "avconv -y -i "
 						+ "\""
 						+ inputFile
@@ -464,6 +488,8 @@ public class PlayFrame extends JFrame implements ActionListener {
 						+ "\"" + outputFile + ".mp4" + "\"";
 				videoworker = new VideoWorker(cmd);
 				videoworker.execute();
+				}
+				}
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -477,21 +503,27 @@ public class PlayFrame extends JFrame implements ActionListener {
 			} else {
 				// Strip (doesn't save audio file)
 				String output = chooseOutputFileName();
-				cmd = "avconv -y -i " + "\"" + Main.file.getAbsolutePath() + "\""
-						+ " -map 0:v " + "\"" + output + ".mp4" + "\"";
+				if(output!=null){
+				cmd = "avconv -y -i " + "\"" + Main.file.getAbsolutePath()
+						+ "\"" + " -map 0:v " + "\"" + output + ".mp4" + "\"";
 				videoworker = new VideoWorker(cmd);
 				videoworker.execute();
+				}
 			}
 		} else if (selection == 3) {
+			//check if the audio signals exists
 			if (mediaPlayerComponent.getMediaPlayer().getAudioTrackCount() == 0) {
 				JOptionPane.showMessageDialog(this, "No audio signal exists");
 
 			} else {
 				String outputFileName = chooseOutputFileName();
-				cmd = "avconv -y -i " + "\"" + Main.file.getAbsolutePath() + "\""
-						+ " " + "\"" + outputFileName + ".mp3" + "\"";
+				if(outputFileName!=null){
+					//command for extract
+				cmd = "avconv -y -i " + "\"" + Main.file.getAbsolutePath()
+						+ "\"" + " " + "\"" + outputFileName + ".mp3" + "\"";
 				videoworker = new VideoWorker(cmd);
 				videoworker.execute();
+				}
 			}
 		}
 	}
@@ -515,12 +547,13 @@ public class PlayFrame extends JFrame implements ActionListener {
 				return chooseInputAudioFile();
 
 			}
+		}else if(returnVal==JFileChooser.CANCEL_OPTION){
+			return null;
 		}
 		return null;
 
 	}
 
-	// strip
 	// backward forward
 	public class BackwardFarwardWorker extends SwingWorker<Void, Void> {
 		int options;
@@ -554,7 +587,7 @@ public class PlayFrame extends JFrame implements ActionListener {
 			skipworker.cancel(true);
 		}
 	}
-
+    //swingworker for editing the video
 	public class VideoWorker extends SwingWorker<Void, Integer> {
 		private String _cmd;
 		private int exitStatus;
@@ -624,7 +657,6 @@ public class PlayFrame extends JFrame implements ActionListener {
 								.group(1));
 
 						_timeLength = (3600 * hour) + (60 * minute) + second;
-						System.out.println(_timeLength);
 					}
 				}
 
@@ -653,7 +685,7 @@ public class PlayFrame extends JFrame implements ActionListener {
 			double bitrate = 0;
 			double currentSize = 0;
 			// 22 character (0 -21 index)
-			
+
 			Pattern progressPat = Pattern
 					.compile("L?size=\\s*(\\d*)kB\\stime=\\d*.\\d*\\sbitrate=\\s(\\d*.\\d)kbits/s");
 
@@ -663,7 +695,6 @@ public class PlayFrame extends JFrame implements ActionListener {
 				if (progressMatcher.find()) {
 					currentSize = Double.parseDouble(progressMatcher.group(1)) / 1024;
 					bitrate = Double.parseDouble(progressMatcher.group(2));
-					System.out.println("current:"+currentSize+"bitrate:"+bitrate);
 					double finalSize = _timeLength * bitrate / (8 * 1024);
 					double percentage = (currentSize / finalSize) * 100;
 					publish((int) percentage);
