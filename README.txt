@@ -2,7 +2,7 @@ VAMIX Version 1.0 /25/09/2014
 
 PLEASE READ THE INSTRUCTION BELOW BEFORE USING VAMIX !!!!!!!
 
-HOW TO RUN IT: jar file ?
+HOW TO RUN IT: Double click on the jar file provided.
 
 ------------------------
 MAIN WINDOW INSTRUCTION 
