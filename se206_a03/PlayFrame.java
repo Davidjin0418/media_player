@@ -687,7 +687,7 @@ public class PlayFrame extends JFrame implements ActionListener {
 			// 22 character (0 -21 index)
 
 			Pattern progressPat = Pattern
-					.compile("L?size=\\s*(\\d*)kB\\stime=\\d*.\\d*\\sbitrate=\\s(\\d*.\\d)kbits/s");
+					.compile("L?size=\\s*(\\d*)kB\\stime=\\d*.\\d*\\sbitrate=\\s*(\\d*.\\d)kbits/s");
 
 			// time[s]*bitrate[kbps] = size[MB]
 			while ((line = stdoutBuffered.readLine()) != null && !isCancelled()) {

@@ -92,7 +92,7 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 			double currentSize = 0;
 			//22 character (0 -21 index)
 			Pattern durationPat = Pattern.compile("Duration:\\s(\\d\\d):(\\d\\d):(\\d\\d.\\d\\d),");
-			Pattern progressPat = Pattern.compile("L?size=\\s*(\\d*)kB\\stime=\\d*.\\d*\\sbitrate=\\s(\\d*.\\d)kbits/s");
+			Pattern progressPat = Pattern.compile("L?size=\\s*(\\d*)kB\\stime=\\d*.\\d*\\sbitrate=\\s*(\\d*.\\d)kbits/s");
 			
 
 			// time[s]*bitrate[kbps] = size[MB]
