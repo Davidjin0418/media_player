@@ -265,12 +265,15 @@ public class Test extends JFrame implements ActionListener {
 
 		panel.add(time);
 		
-		lblTime = new JLabel("00:00:00"+"/"+String.valueOf((int)mediaPlayerComponent.getMediaPlayer().getMediaMeta().getLength()));
+		lblTime = new JLabel("0:00:00"+"/"+"0:00:00");
+		
 		sl_panel.putConstraint(SpringLayout.NORTH, lblTime, 337, SpringLayout.NORTH, panel);
 		sl_panel.putConstraint(SpringLayout.WEST, lblTime, 0, SpringLayout.WEST, panel);
 		sl_panel.putConstraint(SpringLayout.SOUTH, lblTime, 0, SpringLayout.SOUTH, panel);
 		sl_panel.putConstraint(SpringLayout.EAST, lblTime, 0, SpringLayout.WEST, time);
+		
 		panel.add(lblTime);
+		
 		editProgressBar = new JProgressBar();
 		editProgressBar.setStringPainted(true);
 		sl_contentPane.putConstraint(SpringLayout.NORTH, editProgressBar, -45,
@@ -289,7 +292,7 @@ public class Test extends JFrame implements ActionListener {
 		sl_contentPane.putConstraint(SpringLayout.SOUTH, lblProgress, 0,
 				SpringLayout.SOUTH, volume);
 		contentPane.add(lblProgress);
-		timer = new Timer(1000, new ActionListener() {
+		timer = new Timer(800, new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -298,8 +301,20 @@ public class Test extends JFrame implements ActionListener {
 					time.setValue((int) mediaPlayerComponent.getMediaPlayer()
 							.getTime());
 					isAutomaticSlide = true;
-					lblTime.setText(String.valueOf((int) mediaPlayerComponent.getMediaPlayer()
-							.getTime()));
+					//get total time
+					int totalTime=(int)mediaPlayerComponent.getMediaPlayer().getMediaMeta().getLength()/1000;
+					int hour=totalTime/3600;
+					int minute=totalTime/60-hour*60;
+					int second=(totalTime%3600)%60;
+					String t=String.valueOf(hour)+":"+String.valueOf(minute)+":"+String.valueOf(second);
+					//get current time
+					int currentTime=(int) mediaPlayerComponent.getMediaPlayer()
+							.getTime()/1000;
+					int currentHour=currentTime/3600;
+					int currentMinute=currentTime/60-currentHour*60;
+					int currentSecond=(currentTime%3600)%60;
+					String current=String.valueOf(currentHour)+":"+String.valueOf(currentMinute)+":"+String.valueOf(currentSecond);
+					lblTime.setText(current+"/"+t);
 				}
 			}
 
