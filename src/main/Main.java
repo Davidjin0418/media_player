@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import javax.swing.JFrame;
 
-import se206_a03.MainFrame;
+import view.MainFrame;
 
 public class Main {
 	//create a static method to edit or play.(for other three frames to use)
