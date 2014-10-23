@@ -55,12 +55,12 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 	}
 
 	public TextFilterWorker() {
-		// TODO Auto-generated constructor stub
+		
 	}
 
 	@Override
 	protected Integer doInBackground() throws Exception {
-		// TODO Auto-generated method stub
+		
 		//command to get the duration
 		parseDuration();
 		
@@ -238,7 +238,7 @@ public class TextFilterWorker extends SwingWorker<Integer, Integer> {
 			pw.close();
 			bw.close();
 		} catch (IOException e2) {
-			// TODO Auto-generated catch block
+			
 			e2.printStackTrace();
 		}
 		cmd.append("textfile='" + _openTempFile.getAbsolutePath() + "':");

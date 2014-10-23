@@ -43,7 +43,6 @@ public class PreviewWorker extends TextFilterWorker {
 	
 	@Override
 	protected Integer doInBackground() throws Exception {
-		// TODO Auto-generated method stub
 		parseDuration();
 				
 		//command to process the video
