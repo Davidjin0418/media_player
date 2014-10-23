@@ -2,19 +2,13 @@ package view;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
-import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.GraphicsEnvironment;
-import java.awt.Shape;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -23,18 +17,12 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.swing.BorderFactory;
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
-import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
@@ -44,19 +32,13 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
-import javax.swing.JTextArea;
 import javax.swing.JTextPane;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.filechooser.FileFilter;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.AbstractDocument;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.BoxView;
@@ -68,9 +50,7 @@ import javax.swing.text.IconView;
 import javax.swing.text.LabelView;
 import javax.swing.text.NumberFormatter;
 import javax.swing.text.ParagraphView;
-import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
-import javax.swing.text.StyleContext;
 import javax.swing.text.StyledDocument;
 import javax.swing.text.StyledEditorKit;
 import javax.swing.text.View;
@@ -79,10 +59,10 @@ import javax.swing.text.ViewFactory;
 import control.PreviewWorker;
 import control.TextFilterWorker;
 import main.Main;
-import model.FrameAdapter;
+import model.WrapEditorKit;
 
 
-public class TextFrame extends FrameAdapter implements ActionListener{
+public class TextFrame extends JFrame implements ActionListener{
 	
 	
 	private JTextPane _textForOpen;
@@ -93,11 +73,11 @@ public class TextFrame extends FrameAdapter implements ActionListener{
 	private JLabel _openLabel;
 	private JLabel _closeLabel;
 	
-	private JComboBox _openFontDropBox;
+	private JComboBox<?> _openFontDropBox;
 	private JSpinner _openFontSizeSpinner;
 	private JButton _openColourButton;
 	
-	private JComboBox _closeFontDropBox;
+	private JComboBox<?> _closeFontDropBox;
 	private JSpinner _closeFontSizeSpinner;
 	private JButton _closeColourButton;	
 	
@@ -204,7 +184,7 @@ public class TextFrame extends FrameAdapter implements ActionListener{
 		_openColourButton = new JButton("colour");
 		
 		_textForOpen.setFont(defaultFont);
-		_openFontDropBox = new JComboBox(ubuntuFont);
+		_openFontDropBox = new JComboBox<Object>(ubuntuFont);
 		for (int i =0; i<ubuntuFont.length; i++) {
 			if (_textForOpen.getFont().getName().equals(ubuntuFont[i]) ) {
 				_openFontDropBox.setSelectedIndex(i);
@@ -219,7 +199,7 @@ public class TextFrame extends FrameAdapter implements ActionListener{
 		_closeColourButton = new JButton("colour");
 		
 		_textForClose.setFont(defaultFont);
-		_closeFontDropBox = new JComboBox(ubuntuFont);
+		_closeFontDropBox = new JComboBox<Object>(ubuntuFont);
 		
 		for (int i =0; i<ubuntuFont.length; i++) {
 			if (_textForOpen.getFont().getName().equals(ubuntuFont[i]) ) {
@@ -358,12 +338,42 @@ public class TextFrame extends FrameAdapter implements ActionListener{
 		checkTextSetting();
 		
 		
-		this.addWindowListener(this);
 		this.setSize(1280,800);
 		this.setResizable(false);
 		this.setLocationRelativeTo(null);
 		this.pack();
 		this.setVisible(true);
+		
+		this.addWindowListener(new java.awt.event.WindowAdapter(){
+			@Override
+			public void windowClosing(WindowEvent e) {
+				
+				if (_currentTextWorker != null) {
+					if (_currentTextWorker.isDone() == false) {
+						int yn = JOptionPane.showConfirmDialog(TextFrame.this,
+							    "The video is still processing, do you want to quit ? \n(Quitting will abandon the operation)",
+							    "Warning",
+							    JOptionPane.YES_NO_OPTION);
+						
+						if (yn == 0) {
+							_currentTextWorker.cancel(true);
+							_btnAddText.setEnabled(true);
+							dispose();
+							
+						}
+					}
+					else {
+						_btnAddText.setEnabled(true);
+						dispose();
+						
+					}
+				}
+				else {
+					_btnAddText.setEnabled(true);
+					dispose();
+				}
+			}
+		});
 	}
 
 	@Override
@@ -550,34 +560,7 @@ public class TextFrame extends FrameAdapter implements ActionListener{
 	
 
 
-	@Override
-	public void windowClosing(WindowEvent e) {
-		
-		if (_currentTextWorker != null) {
-			if (_currentTextWorker.isDone() == false) {
-				int yn = JOptionPane.showConfirmDialog(TextFrame.this,
-					    "The video is still processing, do you want to quit ? \n(Quitting will abandon the operation)",
-					    "Warning",
-					    JOptionPane.YES_NO_OPTION);
-				
-				if (yn == 0) {
-					_currentTextWorker.cancel(true);
-					this._btnAddText.setEnabled(true);
-					this.dispose();
-					
-				}
-			}
-			else {
-				this._btnAddText.setEnabled(true);
-				this.dispose();
-				
-			}
-		}
-		else {
-			this._btnAddText.setEnabled(true);
-			this.dispose();
-		}
-	}
+	
 
 	
 
@@ -648,55 +631,9 @@ public class TextFrame extends FrameAdapter implements ActionListener{
 
 }
 
-//taken from http://stackoverflow.com/questions/8666727/wrap-long-words-in-jtextpane-java-7 written by Stanislav Lapitsky
-//to wrap long word within text pane to the next line
-//---------------------------------------------------------------------------
-class WrapEditorKit extends StyledEditorKit {
-    ViewFactory defaultFactory=new WrapColumnFactory();
-    public ViewFactory getViewFactory() {
-        return defaultFactory;
-    }
 
-}
 
-class WrapColumnFactory implements ViewFactory {
-    public View create(Element elem) {
-        String kind = elem.getName();
-        if (kind != null) {
-            if (kind.equals(AbstractDocument.ContentElementName)) {
-                return new WrapLabelView(elem);
-            } else if (kind.equals(AbstractDocument.ParagraphElementName)) {
-                return new ParagraphView(elem);
-            } else if (kind.equals(AbstractDocument.SectionElementName)) {
-                return new BoxView(elem, View.Y_AXIS);
-            } else if (kind.equals(StyleConstants.ComponentElementName)) {
-                return new ComponentView(elem);
-            } else if (kind.equals(StyleConstants.IconElementName)) {
-                return new IconView(elem);
-            }
-        }
 
-        // default to text display
-        return new LabelView(elem);
-    }
-}
 
-class WrapLabelView extends LabelView {
-    public WrapLabelView(Element elem) {
-        super(elem);
-    }
 
-    public float getMinimumSpan(int axis) {
-        switch (axis) {
-            case View.X_AXIS:
-                return 0;
-            case View.Y_AXIS:
-                return super.getMinimumSpan(axis);
-            default:
-                throw new IllegalArgumentException("Invalid axis: " + axis);
-        }
-    }
-
-}
-//-----------------------------------------------------------------------------
 

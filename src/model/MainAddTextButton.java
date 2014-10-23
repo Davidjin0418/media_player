@@ -10,29 +10,30 @@ import main.Main;
 import view.TextFrame;
 import control.FileControl;
 
-public class MainAddTextButton extends JButton {
+public class MainAddTextButton extends JButton implements ActionListener{
+	
     public MainAddTextButton(){
-    	
-    	this.setText("Add Text");
-    	this.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (Main.file != null) {
-					if (FileControl.isAudioVideoFile(Main.file).equals("video")) {
-						TextFrame textframe = new TextFrame();
-						btnAddText.setEnabled(false);
-					} else {
-						JOptionPane
-								.showMessageDialog(
-										null,
-										"ERROR: "
-												+ Main.file.getName()
-												+ " is an audio file, can't apply text onto it");
-					}
-				}
-				
-			}
-		});
+    
+    	setText("Add Text");
+    	addActionListener(this);
     }
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		if(e.getSource()==this){
+			if (Main.file != null) {
+				if (FileControl.isAudioVideoFile(Main.file).equals("video")) {
+					TextFrame textframe = new TextFrame(this);
+					this.setEnabled(false);
+				} else {
+					JOptionPane
+							.showMessageDialog(
+									null,
+									"ERROR: "
+											+ Main.file.getName()
+											+ " is an audio file, can't apply text onto it");
+				}
+			}
+		}
+		
+	}
 }

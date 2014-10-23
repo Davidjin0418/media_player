@@ -25,7 +25,7 @@ public class MainChooseButton extends JButton{
 			@Override
 			public void actionPerformed(ActionEvent e) {
                     try {
-						FileControl.chooseFile(currentFile);
+						FileControl.chooseInpuMediaFile(currentFile);
 					} catch (IOException e1) {
 						e1.printStackTrace();
 					}				

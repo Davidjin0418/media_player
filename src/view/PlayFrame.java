@@ -15,7 +15,6 @@ import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.filechooser.FileNameExtensionFilter;
 
 import uk.co.caprica.vlcj.component.EmbeddedMediaPlayerComponent;
 
@@ -54,6 +53,8 @@ import javax.swing.UIManager;
 import javax.swing.JScrollPane;
 
 import main.Main;
+import model.PlayEditButton;
+import model.PlayHistoryList;
 
 public class PlayFrame extends JFrame implements ActionListener {
 
@@ -65,7 +66,7 @@ public class PlayFrame extends JFrame implements ActionListener {
 	private JButton btnBackward;
 	private JButton btnPlay;
 	private JButton btnMute;
-	private JButton btnEdit;
+	private PlayEditButton btnEdit;
 	private JSlider time;
 	private JSlider volume;
 	private JProgressBar editProgressBar;
@@ -79,6 +80,8 @@ public class PlayFrame extends JFrame implements ActionListener {
 	private boolean isAutomaticSlide = false;
 	private JLabel lblTime;
 	private JPanel historyPanel;
+
+	private boolean isPlaying = true;
 
 	/**
 	 * Create the frame.
@@ -198,48 +201,14 @@ public class PlayFrame extends JFrame implements ActionListener {
 				SpringLayout.EAST, panel);
 		contentPane.add(historyPanel);
 
-		BufferedReader in = null;
-		String line;
-		@SuppressWarnings("rawtypes")
-		DefaultListModel listModel = new DefaultListModel();
-		try {
-			String root = System.getProperty("user.home");
-			in = new BufferedReader(
-					new FileReader(root + "/.vamix/history.txt"));
-			while ((line = in.readLine()) != null) {
-				listModel.addElement(line);
-			}
-		} catch (IOException ex) {
-
-		} finally {
-			if (in != null) {
-				in.close();
-			}
-		}
+		
 		historyPanel.setLayout(new BorderLayout(0, 0));
 		@SuppressWarnings("unchecked")
-		JList list = new JList(listModel);
-		list.setBorder(null);
+		PlayHistoryList list = new PlayHistoryList(mediaPlayerComponent);
+		
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setViewportView(list);
 		historyPanel.add(scrollPane, BorderLayout.CENTER);
-		list.addMouseListener(new MouseAdapter() {
-			public void mouseClicked(MouseEvent evt) {
-				@SuppressWarnings("rawtypes")
-				JList list = (JList) evt.getSource();
-				if (evt.getClickCount() == 2) {
-					Main.file = new File(list.getSelectedValue().toString());
-					if (Main.file != null) {
-						mediaPlayerComponent.getMediaPlayer().playMedia(
-								Main.file.getAbsolutePath());
-					} else {
-						JOptionPane.showMessageDialog(null,
-								"Can not find the file");
-					}
-				}
-			}
-		});
-		list.setBackground(Color.LIGHT_GRAY);
 
 		JPanel btnPanel = new JPanel();
 		btnPanel.setBackground(Color.LIGHT_GRAY);
@@ -273,10 +242,9 @@ public class PlayFrame extends JFrame implements ActionListener {
 		editProgressBar.setBackground(Color.LIGHT_GRAY);
 		editProgressBar.setStringPainted(true);
 
-		btnEdit = new JButton("Edit ");
+		btnEdit = new PlayEditButton(videoworker, editProgressBar,
+				mediaPlayerComponent);
 		historyPanel.add(btnEdit, BorderLayout.NORTH);
-
-		btnEdit.addActionListener(this);
 
 		btnPause = new JButton("", new ImageIcon(
 				PlayFrame.class.getResource("/se206_a03/png/pause15.png")));
@@ -342,7 +310,6 @@ public class PlayFrame extends JFrame implements ActionListener {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				// TODO Auto-generated method stub
 				if (time.getValue() < time.getMaximum()) {
 					time.setValue((int) mediaPlayerComponent.getMediaPlayer()
 							.getTime());
@@ -388,84 +355,32 @@ public class PlayFrame extends JFrame implements ActionListener {
 		timer.start();
 	}
 
-	// choose output file name to save it,default by "output"
-	public String chooseOutputFileName() {
-		String path = choosePath();
-		if (path != null) {
-			String outputFileName = JOptionPane.showInputDialog(
-					"Please enter the output file name without extension",
-					"output");
-			if (!(outputFileName == null)) {
-				File f1 = new File(path + "/" + outputFileName + ".mp3");
-				File f2 = new File(path + "/" + outputFileName + ".mp4");
-				File f3 = new File(path + "/" + outputFileName + ".png");
-				// check if file exists
-				if (f1.exists() || f2.exists() || f3.exists()) {
-					String[] options = { "Yes", "Cancel" };
-					int selection = JOptionPane.showOptionDialog(null,
-							outputFileName
-									+ " exists,Do you want to override it?",
-							"Warning", JOptionPane.DEFAULT_OPTION,
-							JOptionPane.WARNING_MESSAGE, null, options,
-							options[0]);
-					if (selection == 0) {
-						return path + "/" + outputFileName;
-					} else {
-						JOptionPane.showMessageDialog(this,
-								"Please choose another output file name");
-						return this.chooseOutputFileName();
-
-					}
-				} else {
-					return path + "/" + outputFileName;
-				}
-			}
-		} else {
-			return null;
-		}
-		return null;
-	}
-
-	// choose the directory in order to save the file
-	public String choosePath() {
-		// from http://www.rgagnon.com/javadetails/java-0370.html
-		JFileChooser chooser = new JFileChooser();
-		chooser.setCurrentDirectory(new java.io.File("."));
-		chooser.setDialogTitle("Choose a diretory to save file");
-		chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-		//
-		// disable the "All files" option.
-		//
-		chooser.setAcceptAllFileFilterUsed(false);
-		// path default to root directory
-		String path = "/";
-		if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-			path = chooser.getSelectedFile().getAbsolutePath();
-			return path;
-		} else {
-			return null;
-		}
-
-	}
-
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == btnPlay) {
 			// play the media.
-			cancelWorker();
+			skipworker.cancelWorker();
 			mediaPlayerComponent.getMediaPlayer().play();
 		} else if (e.getSource() == btnPause) {
 			// pause the media.
-			cancelWorker();
+			isPlaying = !isPlaying;
+			skipworker.cancelWorker();
 			mediaPlayerComponent.getMediaPlayer().pause();
+			if (mediaPlayerComponent.getMediaPlayer().isPlaying() == true) {
+				btnPause.setIcon(new ImageIcon(PlayFrame.class
+						.getResource("/se206_a03/png/pause15.png")));
+			}else{
+				btnPause.setIcon(new ImageIcon(
+						PlayFrame.class.getResource("/se206_a03/png/play43.png")));
+			}
 		} else if (e.getSource() == btnForward) {
 			// keep forward
-			cancelWorker();
+			skipworker.cancelWorker();
 			skipworker = new BackwardFarwardWorker(0, mediaPlayerComponent);
 			skipworker.execute();
 		} else if (e.getSource() == btnBackward) {
 			// keep backword
-			cancelWorker();
+			skipworker.cancelWorker();
 			skipworker = new BackwardFarwardWorker(1, mediaPlayerComponent);
 			skipworker.execute();
 		} else if (e.getSource() == btnMute) {
@@ -473,181 +388,6 @@ public class PlayFrame extends JFrame implements ActionListener {
 			mediaPlayerComponent.getMediaPlayer().mute();
 			volumeEnable = !volumeEnable;
 			volume.setEnabled(volumeEnable);
-		} else if (e.getSource() == btnEdit) {
-			if (FileControl.isAudioVideoFile(Main.file).equals("audio")) {
-				JOptionPane
-						.showMessageDialog(this, "Can not edit a audio file");
-			} else {
-				editProgressBar.setMinimum(0);
-				editProgressBar.setMaximum(100);
-				if (!videoworker.isDone()) {
-					String[] options = { "Yes", "No" };
-					int selection = JOptionPane
-							.showOptionDialog(
-									null,
-									"Video is being edited ,would you like to cancel it?",
-									"Warning", JOptionPane.DEFAULT_OPTION,
-									JOptionPane.WARNING_MESSAGE, null, options,
-									options[0]);
-					if (selection == 0) {
-						// if cancel the video worker
-						videoworker.cancel(true);
-						editProgressBar.setValue(0);
-						editProgressBar.setString("0%");
-						editVideo();
-					} else {
-						// if doesn't cancel, do nothing
-					}
-				} else {
-					editProgressBar.setValue(0);
-					editProgressBar.setString("0%");
-					editVideo();
-				}
-
-			}
-		}
-	}
-
-	private void editVideo() {
-		String[] options = { "Overlay", "Replace", "Strip", "Extract",
-				"Screenshot" };
-		int selection = JOptionPane.showOptionDialog(null,
-				"Which one would you like to do", "Option",
-				JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null,
-				options, options[0]);
-		String cmd = "";
-		if (selection == 0) {
-			try {
-				// overlay
-				String inputFile = FileControl.chooseInputAudioFile();
-				if (inputFile != null) {
-					String outputFile = chooseOutputFileName();
-					if (outputFile != null) {
-						// command for overlay
-						cmd = "avconv -y -i "
-								+ "\""
-								+ Main.file.getAbsolutePath()
-								+ "\""
-								+ " -i "
-								+ "\""
-								+ inputFile
-								+ "\""
-								+ " -filter_complex amix=inputs=2 -strict experimental "
-								+ "\"" + outputFile + ".mp4" + "\"";
-						videoworker = new VideoWorker(cmd, editProgressBar);
-						videoworker.execute();
-					}
-				}
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-
-		} else if (selection == 1) {
-			// replace
-			try {
-				String inputFile = FileControl.chooseInputAudioFile();
-				if (inputFile != null) {
-					String outputFile = chooseOutputFileName();
-					if (outputFile != null) {
-						// command for replace
-						cmd = "avconv -y -i "
-								+ "\""
-								+ inputFile
-								+ "\""
-								+ " -i "
-								+ "\""
-								+ Main.file.getAbsolutePath()
-								+ "\""
-								+ " -map 0:0 -map 1:0 -acodec copy -vcodec copy -shortest "
-								+ "\"" + outputFile + ".mp4" + "\"";
-						videoworker = new VideoWorker(cmd, editProgressBar);
-						videoworker.execute();
-					}
-				}
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-
-		} else if (selection == 2) {
-			// check if the audio signals exists
-			if (mediaPlayerComponent.getMediaPlayer().getAudioTrackCount() == 0) {
-				JOptionPane.showMessageDialog(this, "No audio signal exists");
-
-			} else {
-				// Strip (doesn't save audio file)
-				String output = chooseOutputFileName();
-				if (output != null) {
-					cmd = "avconv -y -i " + "\"" + Main.file.getAbsolutePath()
-							+ "\"" + " -map 0:v " + "\"" + output + ".mp4"
-							+ "\"";
-					videoworker = new VideoWorker(cmd, editProgressBar);
-					videoworker.execute();
-				}
-			}
-		} else if (selection == 3) {
-			// check if the audio signals exists
-			if (mediaPlayerComponent.getMediaPlayer().getAudioTrackCount() == 0) {
-				JOptionPane.showMessageDialog(this, "No audio signal exists");
-
-			} else {
-				String outputFileName = chooseOutputFileName();
-				if (outputFileName != null) {
-					// command for extract
-					cmd = "avconv -y -i " + "\"" + Main.file.getAbsolutePath()
-							+ "\"" + " " + "\"" + outputFileName + ".mp3"
-							+ "\"";
-					videoworker = new VideoWorker(cmd, editProgressBar);
-					videoworker.execute();
-				}
-			}
-		} else if (selection == 4) {
-			int totalTime = (int) mediaPlayerComponent.getMediaPlayer()
-					.getMediaMeta().getLength() / 1000;
-			int hour = totalTime / 3600;
-			// get total time of the media
-			SpinnerNumberModel hourModel = new SpinnerNumberModel(0, 0, hour, 1);
-			SpinnerNumberModel minuteModel = new SpinnerNumberModel(0, 0, 59, 1);
-			SpinnerNumberModel secondModel = new SpinnerNumberModel(0, 0, 59, 1);
-			JSpinner hourSpinner = new JSpinner(hourModel);
-			JSpinner minuteSpinner = new JSpinner(minuteModel);
-			JSpinner SecondSpinner = new JSpinner(secondModel);
-			Object[] message = { "Hour:", hourSpinner, "Minute:",
-					minuteSpinner, "Second", SecondSpinner, };
-			int option = JOptionPane.showConfirmDialog(null, message,
-					"Choose the time", JOptionPane.OK_CANCEL_OPTION);
-			if (option == 0) {
-				int selectHour = (int) hourSpinner.getValue();
-				int selectMinute = (int) minuteSpinner.getValue();
-				int selectSecond = (int) SecondSpinner.getValue();
-				if ((selectHour * 3600 + selectMinute * 60 + selectSecond) > totalTime) {
-					JOptionPane.showMessageDialog(null, "Invalid time, the time exceeds the total time");
-				} else {
-					// cmd for screenshot
-					String outputFileName = chooseOutputFileName();
-					if (outputFileName != null) {
-						String time = String.valueOf(selectHour) + ":"
-								+ String.valueOf(selectMinute) + ":"
-								+ String.valueOf(selectSecond);
-						cmd = "avconv -y -i " + "\""
-								+ Main.file.getAbsolutePath() + "\"" + " "
-								+ "-ss" + " " + time + " " + "-vframes 1" + " "
-								+ "\"" + outputFileName + ".png" + "\"";
-						System.out.println(cmd);
-						videoworker = new VideoWorker(cmd, editProgressBar);
-						videoworker.execute();
-					}
-				}
-
-			}
-		}
-	}
-
-	// method to cancel skipworker
-	public void cancelWorker() {
-		if (!skipworker.isCancelled()) {
-			skipworker.cancel(true);
 		}
 	}
 

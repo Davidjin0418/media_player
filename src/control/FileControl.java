@@ -14,7 +14,7 @@ import view.PlayFrame;
 import main.Main;
 
 public class FileControl {
-	public static void chooseFile(JTextField currentFile) throws IOException {
+	public static void chooseInpuMediaFile(JTextField currentFile) throws IOException {
 
 		final JFileChooser fc = new JFileChooser();
 		fc.addChoosableFileFilter(new FileNameExtensionFilter("Audio/mp3",
@@ -36,7 +36,7 @@ public class FileControl {
 			} else {
 				JOptionPane.showMessageDialog(null, "ERROR: " + file.getName()
 						+ " does not refer to a valid audio/video file");
-				chooseFile(currentFile);
+				chooseInpuMediaFile(currentFile);
 			}
 		}
 	}
@@ -156,5 +156,63 @@ public class FileControl {
 		}
 		return null;
 
+	}
+	
+	public static String choosePath() {
+		// from http://www.rgagnon.com/javadetails/java-0370.html
+		JFileChooser chooser = new JFileChooser();
+		chooser.setCurrentDirectory(new java.io.File("."));
+		chooser.setDialogTitle("Choose a diretory to save file");
+		chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		//
+		// disable the "All files" option.
+		//
+		chooser.setAcceptAllFileFilterUsed(false);
+		// path default to root directory
+		String path = "/";
+		if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+			path = chooser.getSelectedFile().getAbsolutePath();
+			return path;
+		} else {
+			return null;
+		}
+
+	}
+	
+	public static String chooseOutputFileName() {
+		String path = FileControl.choosePath();
+		if (path != null) {
+			String outputFileName = JOptionPane.showInputDialog(
+					"Please enter the output file name without extension",
+					"output");
+			if (!(outputFileName == null)) {
+				File f1 = new File(path + "/" + outputFileName + ".mp3");
+				File f2 = new File(path + "/" + outputFileName + ".mp4");
+				File f3 = new File(path + "/" + outputFileName + ".png");
+				// check if file exists
+				if (f1.exists() || f2.exists() || f3.exists()) {
+					String[] options = { "Yes", "Cancel" };
+					int selection = JOptionPane.showOptionDialog(null,
+							outputFileName
+									+ " exists,Do you want to override it?",
+							"Warning", JOptionPane.DEFAULT_OPTION,
+							JOptionPane.WARNING_MESSAGE, null, options,
+							options[0]);
+					if (selection == 0) {
+						return path + "/" + outputFileName;
+					} else {
+						JOptionPane.showMessageDialog(null,
+								"Please choose another output file name");
+						return chooseOutputFileName();
+
+					}
+				} else {
+					return path + "/" + outputFileName;
+				}
+			}
+		} else {
+			return null;
+		}
+		return null;
 	}
 }

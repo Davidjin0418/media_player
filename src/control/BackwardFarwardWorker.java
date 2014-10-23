@@ -26,5 +26,11 @@ public class BackwardFarwardWorker extends SwingWorker<Void, Void> {
 		}
 		return null;
 	}
+	
+	public void cancelWorker() {
+		if (!this.isCancelled()) {
+			this.cancel(true);
+		}
+	}
 
 }
