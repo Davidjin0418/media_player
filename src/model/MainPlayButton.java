@@ -7,12 +7,24 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 import javax.swing.JButton;
+import javax.swing.JTextField;
 
+import control.FileControl;
 import main.Main;
 import view.PlayFrame;
-
+/**
+ * 
+ * the button that opens the play frame 
+ *
+ */
 public class MainPlayButton extends JButton implements ActionListener {
-	public MainPlayButton() {
+	JTextField currentFIle;
+	/**
+	 * 
+	 * @param field the text field that displays the current file in main frame
+	 */
+	public MainPlayButton(JTextField field) {
+		currentFIle=field;
 		this.setText("Play");
 		this.addActionListener(this);
 	}
@@ -22,17 +34,9 @@ public class MainPlayButton extends JButton implements ActionListener {
 		if (e.getSource() == this) {
 			if (Main.file != null) {
 				try {
-					String root = System.getProperty("user.home");
-					File history = new File(root + "/.vamix/history.txt");
-					// write to history
-					if (!history.exists()) {
-						history.createNewFile();
-					}
-					FileWriter fw = new FileWriter(history, true);
-					fw.write(Main.file.getAbsolutePath() + "\n");
-					fw.close();
+					FileControl.writeToHistory();
 
-					PlayFrame playframe = new PlayFrame(this);
+					PlayFrame playframe = new PlayFrame(this,currentFIle);
 				} catch (IOException ex) {
 					ex.printStackTrace();
 				}

@@ -17,22 +17,25 @@ import control.FileControl;
 import main.Main;
 import view.MainFrame;
 
-public class MainChooseButton extends JButton{
-    public MainChooseButton(final JTextField currentFile){
-    	this.setText("Choose a file");
-    	this.addActionListener(new ActionListener() {
-			
+/**
+ * 
+ * the button that chooses input file in main frame
+ * 
+ */
+public class MainChooseButton extends JButton {
+	public MainChooseButton(final JTextField currentFile) {
+		this.setText("Choose a file");
+		this.addActionListener(new ActionListener() {
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
-                    try {
-						FileControl.chooseInpuMediaFile(currentFile);
-					} catch (IOException e1) {
-						e1.printStackTrace();
-					}				
+				try {
+					FileControl.chooseInpuMediaFile(currentFile);
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
 			}
 		});
-    }
-    
-    
-    
+	}
+
 }

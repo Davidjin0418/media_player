@@ -10,17 +10,24 @@ import main.Main;
 import view.TextFrame;
 import control.FileControl;
 
-public class MainAddTextButton extends JButton implements ActionListener{
-	
-    public MainAddTextButton(){
-    
-    	setText("Add Text");
-    	addActionListener(this);
-    }
+/**
+ * 
+ * The button in the main frame which create the text frame
+ * 
+ */
+public class MainAddTextButton extends JButton implements ActionListener {
+
+	public MainAddTextButton() {
+
+		setText("Add Text");
+		addActionListener(this);
+	}
+
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if(e.getSource()==this){
+		if (e.getSource() == this) {
 			if (Main.file != null) {
+				// check if the file is video file
 				if (FileControl.isAudioVideoFile(Main.file).equals("video")) {
 					TextFrame textframe = new TextFrame(this);
 					this.setEnabled(false);
@@ -34,6 +41,6 @@ public class MainAddTextButton extends JButton implements ActionListener{
 				}
 			}
 		}
-		
+
 	}
 }

@@ -27,6 +27,11 @@ import control.*;
 
 import java.awt.Dimension;
 
+/**
+ * 
+ * @author bojun
+ * 
+ */
 public class MainFrame extends JFrame {
 
 	private JPanel mainPane;
@@ -47,19 +52,20 @@ public class MainFrame extends JFrame {
 	 * @throws IOException
 	 */
 	public MainFrame() throws IOException {
+		setBackground(Color.LIGHT_GRAY);
 		this.initialisation();
 		JTabbedPane mainTabPane = new JTabbedPane();
+		mainTabPane.setBackground(Color.LIGHT_GRAY);
 		JPanel downloadPanel = new JPanel();
 
-		downloadPanel.setBackground(new Color(238, 238, 238));
+		downloadPanel.setBackground(Color.LIGHT_GRAY);
 		downloadPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		downloadPanel.setLayout(null);
 		setTitle("Welcome to VAMIX");
 
 		mainPane = new JPanel();
-		mainPane.setBackground(new Color(238, 238, 238));
+		mainPane.setBackground(Color.LIGHT_GRAY);
 		mainPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-		// setContentPane(mainPane);
 		setContentPane(mainTabPane);
 		mainPane.setLayout(null);
 
@@ -101,7 +107,7 @@ public class MainFrame extends JFrame {
 		btnChooseAFile.setBounds(327, 31, 126, 29);
 		mainPane.add(btnChooseAFile);
 
-		btnPlay = new MainPlayButton();
+		btnPlay = new MainPlayButton(currentFIle);
 		btnPlay.setBounds(137, 72, 75, 29);
 		mainPane.add(btnPlay);
 
@@ -173,12 +179,10 @@ public class MainFrame extends JFrame {
 		if (!file.exists()) {
 			file.mkdir();
 		}
-		Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
-		int x = (int) ((dimension.getWidth() - this.getWidth()) / 2);
-		int y = (int) ((dimension.getHeight() - this.getHeight()) / 2);
+		Dimension dimension=Toolkit.getDefaultToolkit().getScreenSize();
+		int x= (int)((dimension.getWidth()-this.getWidth())/2);
+		int y= (int)((dimension.getHeight()-this.getHeight())/2);
 		this.setLocation(x, y);
 	}
-
-	
 
 }

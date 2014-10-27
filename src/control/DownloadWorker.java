@@ -15,7 +15,11 @@ import javax.swing.SwingWorker;
 
 import view.MainFrame;
 
-    public class DownloadWorker extends SwingWorker<Void, Integer> {
+/**
+ * this is the class for download the open source media file. It extends
+ * SwingWorker class.
+ */
+public class DownloadWorker extends SwingWorker<Void, Integer> {
 	private String fileName;
 	private int exitStatus;
 	private String url;
@@ -23,17 +27,31 @@ import view.MainFrame;
 	private JButton btnStartDownload;
 	private boolean isDownloading;
 
+	/**
+	 * Constructor of the class
+	 * 
+	 * @param link
+	 *            download url
+	 * @param bar
+	 *            progress bar to show the status
+	 * @param button
+	 *            the button that controls the download
+	 * @param download
+	 *            check the if the file is downloading
+	 * @param name
+	 *            the output file name
+	 */
 	public DownloadWorker(String link, JProgressBar bar, JButton button,
-			boolean download) {
+			boolean download, String name) {
 		btnStartDownload = button;
 		url = link;
 		progressBar = bar;
 		isDownloading = download;
+		fileName = name;
 	}
 
 	@Override
 	protected Void doInBackground() throws Exception {
-		// String cmd = "wget " + "\"" + url + "\" -O ./" + fileName;
 		ProcessBuilder pb = new ProcessBuilder("wget", url, "-O", fileName);
 
 		pb.redirectErrorStream(true);
@@ -73,7 +91,6 @@ import view.MainFrame;
 			process.getErrorStream().close();
 			process.destroy();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
@@ -94,7 +111,7 @@ import view.MainFrame;
 			boolean removeFile = true;
 			progressBar.setString("Error");
 			switch (exitStatus) {
-
+			// error handling
 			case 0:
 				progressBar.setString("Download Completed");
 				removeFile = false;
@@ -153,7 +170,7 @@ import view.MainFrame;
 					process.getErrorStream().close();
 					process.destroy();
 				} catch (IOException | InterruptedException e) {
-					// TODO Auto-generated catch block
+
 					e.printStackTrace();
 				}
 			}

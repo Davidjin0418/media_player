@@ -15,14 +15,27 @@ import javax.swing.JOptionPane;
 import uk.co.caprica.vlcj.component.EmbeddedMediaPlayerComponent;
 import main.Main;
 
+/**
+ * the list that display the history files
+ * 
+ * 
+ */
 public class PlayHistoryList extends JList {
 	private EmbeddedMediaPlayerComponent mediaPlayerComponent;
-    public PlayHistoryList(EmbeddedMediaPlayerComponent player) throws IOException{
-    	mediaPlayerComponent=player;
-    	this.setBorder(null);
-    	this.setBackground(Color.LIGHT_GRAY);
-    	
-    	BufferedReader in = null;
+
+	/**
+	 * 
+	 * @param player
+	 *            the media player component
+	 * @throws IOException
+	 */
+	public PlayHistoryList(EmbeddedMediaPlayerComponent player)
+			throws IOException {
+		mediaPlayerComponent = player;
+		this.setBorder(null);
+		this.setBackground(Color.LIGHT_GRAY);
+
+		BufferedReader in = null;
 		String line;
 		@SuppressWarnings("rawtypes")
 		DefaultListModel listModel = new DefaultListModel();
@@ -41,6 +54,8 @@ public class PlayHistoryList extends JList {
 			}
 		}
 		this.setModel(listModel);
+		// if user double click the selected the file, it plays the file
+		// selected
 		this.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent evt) {
 				@SuppressWarnings("rawtypes")
@@ -58,5 +73,5 @@ public class PlayHistoryList extends JList {
 			}
 		});
 
-    }
+	}
 }

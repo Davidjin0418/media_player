@@ -1,14 +1,29 @@
 package control;
+
 import uk.co.caprica.vlcj.component.EmbeddedMediaPlayerComponent;
 import javax.swing.SwingWorker;
 
+/**
+ * BackwardFarwardWorker class extends SwingWorker, it is used for playing the
+ * media file fast forward or backward based on the option
+ */
 public class BackwardFarwardWorker extends SwingWorker<Void, Void> {
-	int options;
-	EmbeddedMediaPlayerComponent mediaPlayerComponent;
-	// options:0 for forward ,1 for backward.
-	public BackwardFarwardWorker(int option,EmbeddedMediaPlayerComponent m) {
+	private int options;
+	private EmbeddedMediaPlayerComponent mediaPlayerComponent;
+
+	/**
+	 * constructor of the worker
+	 * 
+	 * @param option
+	 *            0 for forward ,1 for backward
+	 * 
+	 * @param m
+	 *            the media player component
+	 * 
+	 */
+	public BackwardFarwardWorker(int option, EmbeddedMediaPlayerComponent m) {
 		options = option;
-		mediaPlayerComponent=m;
+		mediaPlayerComponent = m;
 	}
 
 	@Override
@@ -26,7 +41,7 @@ public class BackwardFarwardWorker extends SwingWorker<Void, Void> {
 		}
 		return null;
 	}
-	
+
 	public void cancelWorker() {
 		if (!this.isCancelled()) {
 			this.cancel(true);

@@ -1,15 +1,11 @@
 package view;
 
 import javax.swing.AbstractButton;
-import javax.swing.DefaultListModel;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
-import javax.swing.JSpinner;
-import javax.swing.SpinnerNumberModel;
+import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
@@ -20,11 +16,6 @@ import uk.co.caprica.vlcj.component.EmbeddedMediaPlayerComponent;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 
 import javax.swing.JButton;
@@ -36,7 +27,6 @@ import uk.co.caprica.vlcj.runtime.RuntimeUtil;
 import com.sun.jna.Native;
 
 import control.BackwardFarwardWorker;
-import control.FileControl;
 import control.VideoWorker;
 
 import java.awt.Font;
@@ -45,16 +35,17 @@ import javax.swing.JSlider;
 
 import java.awt.BorderLayout;
 
-import javax.swing.JList;
-
 import java.awt.Color;
 
 import javax.swing.UIManager;
 import javax.swing.JScrollPane;
 
 import main.Main;
+import model.MainPlayButton;
 import model.PlayEditButton;
 import model.PlayHistoryList;
+import model.PlayNewFileButton;
+import javax.swing.border.LineBorder;
 
 public class PlayFrame extends JFrame implements ActionListener {
 
@@ -64,7 +55,7 @@ public class PlayFrame extends JFrame implements ActionListener {
 	private JButton btnPause;
 	private JButton btnForward;
 	private JButton btnBackward;
-	private JButton btnPlay;
+	private PlayNewFileButton btnNewFile;
 	private JButton btnMute;
 	private PlayEditButton btnEdit;
 	private JSlider time;
@@ -75,8 +66,8 @@ public class PlayFrame extends JFrame implements ActionListener {
 	private Timer timer;
 	private boolean volumeEnable;
 
-	private JButton btnMainFramePlay;
-
+	private MainPlayButton btnMainFramePlay;
+	private JTextField currentFIle;
 	private boolean isAutomaticSlide = false;
 	private JLabel lblTime;
 	private JPanel historyPanel;
@@ -90,9 +81,8 @@ public class PlayFrame extends JFrame implements ActionListener {
 	 * @throws IOException
 	 */
 
-	@SuppressWarnings("unchecked")
-	public PlayFrame(JButton btn) throws IOException {
-
+	public PlayFrame(MainPlayButton btn, JTextField field) throws IOException {
+		currentFIle = field;
 		btnMainFramePlay = btn;
 		// initialize the workers
 		videoworker = new VideoWorker("", editProgressBar);
@@ -109,6 +99,7 @@ public class PlayFrame extends JFrame implements ActionListener {
 		contentPane = new JPanel();
 		contentPane.setBackground(Color.LIGHT_GRAY);
 		panel = new JPanel();
+		panel.setBorder(null);
 		panel.setBackground(Color.LIGHT_GRAY);
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		// set layout
@@ -139,7 +130,6 @@ public class PlayFrame extends JFrame implements ActionListener {
 		contentPane.add(panel);
 
 		setContentPane(contentPane);
-
 		mediaPlayerComponent.getMediaPlayer().playMedia(
 				Main.file.getAbsolutePath());
 
@@ -189,49 +179,33 @@ public class PlayFrame extends JFrame implements ActionListener {
 		panel.add(lblTime);
 
 		historyPanel = new JPanel();
-		historyPanel.setBorder(null);
-		sl_contentPane.putConstraint(SpringLayout.NORTH, historyPanel, 0,
-				SpringLayout.NORTH, panel);
+		sl_contentPane.putConstraint(SpringLayout.NORTH, historyPanel, 0, SpringLayout.NORTH, contentPane);
+		sl_contentPane.putConstraint(SpringLayout.SOUTH, historyPanel, 0, SpringLayout.SOUTH, contentPane);
+		historyPanel.setBorder(new LineBorder(new Color(0, 0, 0)));
 		sl_contentPane.putConstraint(SpringLayout.WEST, historyPanel, 6,
 				SpringLayout.EAST, panel);
-
-		sl_contentPane.putConstraint(SpringLayout.SOUTH, historyPanel, -15,
-				SpringLayout.SOUTH, contentPane);
 		sl_contentPane.putConstraint(SpringLayout.EAST, historyPanel, 190,
 				SpringLayout.EAST, panel);
 		contentPane.add(historyPanel);
 
-		
 		historyPanel.setLayout(new BorderLayout(0, 0));
-		@SuppressWarnings("unchecked")
 		PlayHistoryList list = new PlayHistoryList(mediaPlayerComponent);
-		
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setViewportView(list);
 		historyPanel.add(scrollPane, BorderLayout.CENTER);
 
 		JPanel btnPanel = new JPanel();
+		sl_contentPane.putConstraint(SpringLayout.WEST, btnPanel, 0, SpringLayout.WEST, contentPane);
+		sl_contentPane.putConstraint(SpringLayout.EAST, btnPanel, -6, SpringLayout.WEST, historyPanel);
+		btnPanel.setBorder(new LineBorder(new Color(0, 0, 0)));
 		btnPanel.setBackground(Color.LIGHT_GRAY);
 		sl_contentPane.putConstraint(SpringLayout.NORTH, btnPanel, 0,
 				SpringLayout.SOUTH, panel);
-		sl_contentPane.putConstraint(SpringLayout.WEST, btnPanel, 0,
-				SpringLayout.WEST, contentPane);
 		sl_contentPane.putConstraint(SpringLayout.SOUTH, btnPanel, 0,
 				SpringLayout.SOUTH, contentPane);
-		sl_contentPane.putConstraint(SpringLayout.EAST, btnPanel, -10,
-				SpringLayout.WEST, historyPanel);
 		contentPane.add(btnPanel);
-		btnPlay = new JButton("", new ImageIcon(
-				PlayFrame.class.getResource("/se206_a03/png/play43.png")));
-		btnPanel.add(btnPlay);
-		btnPlay.setForeground(Color.LIGHT_GRAY);
-		btnPlay.setFont(new Font("Lucida Bright", Font.BOLD, 10));
-		btnPlay.setVerticalTextPosition(AbstractButton.BOTTOM);
-		btnPlay.setHorizontalTextPosition(AbstractButton.CENTER);
-		btnPlay.setContentAreaFilled(false);
-		btnPlay.setBorder(new EmptyBorder(0, 0, 0, 10));
-
-		btnPlay.addActionListener(this);
+	    btnNewFile = new PlayNewFileButton(mediaPlayerComponent,this);
+		btnPanel.add(btnNewFile);
 
 		editProgressBar = new JProgressBar();
 		historyPanel.add(editProgressBar, BorderLayout.SOUTH);
@@ -248,13 +222,11 @@ public class PlayFrame extends JFrame implements ActionListener {
 
 		btnPause = new JButton("", new ImageIcon(
 				PlayFrame.class.getResource("/se206_a03/png/pause15.png")));
-
 		btnPause.setFont(new Font("Lucida Bright", Font.BOLD, 10));
 		btnPause.setVerticalTextPosition(AbstractButton.BOTTOM);
 		btnPause.setHorizontalTextPosition(AbstractButton.CENTER);
 		btnPause.addActionListener(this);
 		btnPause.setBorder(new EmptyBorder(0, 0, 0, 10));
-
 		btnPause.setContentAreaFilled(false);
 		btnPanel.add(btnPause);
 
@@ -320,8 +292,7 @@ public class PlayFrame extends JFrame implements ActionListener {
 					int hour = totalTime / 3600;
 					int minute = totalTime / 60 - hour * 60;
 					int second = (totalTime % 3600) % 60;
-					String t = String.valueOf(hour) + ":"
-							+ String.valueOf(minute) + ":"
+					String t = String.valueOf(minute) + ":"
 							+ String.valueOf(second);
 					// get current time
 					int currentTime = (int) mediaPlayerComponent
@@ -329,8 +300,7 @@ public class PlayFrame extends JFrame implements ActionListener {
 					int currentHour = currentTime / 3600;
 					int currentMinute = currentTime / 60 - currentHour * 60;
 					int currentSecond = (currentTime % 3600) % 60;
-					String current = String.valueOf(currentHour) + ":"
-							+ String.valueOf(currentMinute) + ":"
+					String current = String.valueOf(currentMinute) + ":"
 							+ String.valueOf(currentSecond);
 					lblTime.setText(current + "/" + t);
 				}
@@ -340,6 +310,7 @@ public class PlayFrame extends JFrame implements ActionListener {
 		volumeEnable = true;
 		this.addWindowListener(new java.awt.event.WindowAdapter() {
 			public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+
 				// if the media is muted before closing ,set mute to false
 				// otherwise it would be in mute when
 				// open it next time.
@@ -349,30 +320,30 @@ public class PlayFrame extends JFrame implements ActionListener {
 				btnMainFramePlay.setEnabled(true);
 				mediaPlayerComponent.getMediaPlayer().stop();
 				videoworker.cancel(true);
+				currentFIle.setText(Main.file.getAbsolutePath() + " is chosen");
 			}
 		});
 		skipworker = new BackwardFarwardWorker(0, mediaPlayerComponent);
 		timer.start();
+
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if (e.getSource() == btnPlay) {
-			// play the media.
-			skipworker.cancelWorker();
-			mediaPlayerComponent.getMediaPlayer().play();
-		} else if (e.getSource() == btnPause) {
+		if (e.getSource() == btnPause) {
 			// pause the media.
 			isPlaying = !isPlaying;
 			skipworker.cancelWorker();
-			mediaPlayerComponent.getMediaPlayer().pause();
-			if (mediaPlayerComponent.getMediaPlayer().isPlaying() == true) {
+			if (isPlaying) {
 				btnPause.setIcon(new ImageIcon(PlayFrame.class
 						.getResource("/se206_a03/png/pause15.png")));
-			}else{
-				btnPause.setIcon(new ImageIcon(
-						PlayFrame.class.getResource("/se206_a03/png/play43.png")));
+				mediaPlayerComponent.getMediaPlayer().play();
+			} else {
+				btnPause.setIcon(new ImageIcon(PlayFrame.class
+						.getResource("/se206_a03/png/play43.png")));
+				mediaPlayerComponent.getMediaPlayer().pause();
 			}
+
 		} else if (e.getSource() == btnForward) {
 			// keep forward
 			skipworker.cancelWorker();

@@ -2,6 +2,8 @@ package control;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
@@ -10,12 +12,22 @@ import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import uk.co.caprica.vlcj.component.EmbeddedMediaPlayerComponent;
 import view.PlayFrame;
 import main.Main;
 
+/**
+ * this class has all the static method for the file control
+ */
 public class FileControl {
-	public static void chooseInpuMediaFile(JTextField currentFile) throws IOException {
-
+	/**
+	 * @param currentFile
+	 *            the text field that display the current file
+	 * @throws IOException
+	 */
+	public static void chooseInpuMediaFile(JTextField currentFile)
+			throws IOException {
+		// choose the file
 		final JFileChooser fc = new JFileChooser();
 		fc.addChoosableFileFilter(new FileNameExtensionFilter("Audio/mp3",
 				"mp3"));
@@ -27,7 +39,7 @@ public class FileControl {
 		int returnVal = fc.showOpenDialog(null);
 		if (returnVal == JFileChooser.APPROVE_OPTION) {
 			File file = fc.getSelectedFile();
-
+			// check the file
 			if (isAudioVideoFile(file).equals("audio")
 					|| isAudioVideoFile(file).equals("video")) {
 				Main.file = file;
@@ -75,16 +87,23 @@ public class FileControl {
 				return "error";
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+
 			e.printStackTrace();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
+
 			e.printStackTrace();
 		}
 
 		return "other";
 	}
 
+	/**
+	 * check if the file exists
+	 * 
+	 * @param filename
+	 *            if the file exists
+	 * @return true for file exists false for not exists
+	 */
 	public static boolean checkFileExist(String fileName) {
 		StringBuilder cmd = new StringBuilder();
 
@@ -113,7 +132,6 @@ public class FileControl {
 				return true;
 			}
 		} catch (IOException | InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -121,6 +139,13 @@ public class FileControl {
 
 	}
 
+	/**
+	 * check if it overwrites the existing file.
+	 * 
+	 * @param file
+	 *            to overwrite
+	 * @return true for overwriting ,false for not overwriting
+	 */
 	public static boolean isOverWrite(String fileName) {
 
 		int overWrite = JOptionPane
@@ -132,7 +157,13 @@ public class FileControl {
 
 		return (overWrite == 0);
 	}
-	
+
+	/**
+	 * choose the audio file for input.
+	 * 
+	 * @throws IOException
+	 * @return the file name that was chosen.
+	 */
 	public static String chooseInputAudioFile() throws IOException {
 
 		final JFileChooser fc = new JFileChooser();
@@ -157,7 +188,12 @@ public class FileControl {
 		return null;
 
 	}
-	
+
+	/**
+	 * choose the path
+	 * 
+	 * @return the path chosen
+	 */
 	public static String choosePath() {
 		// from http://www.rgagnon.com/javadetails/java-0370.html
 		JFileChooser chooser = new JFileChooser();
@@ -178,7 +214,14 @@ public class FileControl {
 		}
 
 	}
-	
+
+	/**
+	 * choose the name for the output file. the path will be chosen first
+	 * 
+	 * @see choosePath()
+	 * 
+	 * @return the name for the output file ,it also includes path
+	 */
 	public static String chooseOutputFileName() {
 		String path = FileControl.choosePath();
 		if (path != null) {
@@ -199,14 +242,17 @@ public class FileControl {
 							JOptionPane.WARNING_MESSAGE, null, options,
 							options[0]);
 					if (selection == 0) {
+						// override it
 						return path + "/" + outputFileName;
 					} else {
+						// choose the new file name
 						JOptionPane.showMessageDialog(null,
 								"Please choose another output file name");
 						return chooseOutputFileName();
 
 					}
 				} else {
+					// no file with same name exists
 					return path + "/" + outputFileName;
 				}
 			}
@@ -215,6 +261,116 @@ public class FileControl {
 		}
 		return null;
 	}
-	
-	
+
+	/**
+	 * It chooses a new media file in the play frame
+	 * 
+	 * @param player
+	 *            the media player component
+	 * @param f
+	 *            the play frame
+	 * @throws IOException
+	 */
+	public static void chooseNewMediaFile(EmbeddedMediaPlayerComponent player,
+			PlayFrame f) throws IOException {
+		player.getMediaPlayer().pause();
+		final JFileChooser fc = new JFileChooser();
+		fc.addChoosableFileFilter(new FileNameExtensionFilter("Audio/mp3",
+				"mp3"));
+		fc.addChoosableFileFilter(new FileNameExtensionFilter("Video/mp4",
+				"mp4"));
+		fc.addChoosableFileFilter(new FileNameExtensionFilter("Video/avi",
+				"avi"));
+		fc.setAcceptAllFileFilterUsed(false);
+		int returnVal = fc.showOpenDialog(null);
+		if (returnVal == JFileChooser.APPROVE_OPTION) {
+			File file = fc.getSelectedFile();
+
+			if (isAudioVideoFile(file).equals("audio")
+					|| isAudioVideoFile(file).equals("video")) {
+				Main.file = file;
+				f.setTitle(Main.file.getName());
+				player.getMediaPlayer().playMedia(Main.file.getAbsolutePath());
+				writeToHistory();
+			} else {
+				JOptionPane.showMessageDialog(null, "ERROR: " + file.getName()
+						+ " does not refer to a valid audio/video file");
+
+			}
+		}
+	}
+
+	/**
+	 * write the file that is played to the history file under /.vamix folder
+	 * ,it does not add the same file twice.
+	 * 
+	 * @throws IOException
+	 */
+	public static void writeToHistory() throws IOException {
+		String root = System.getProperty("user.home");
+		File history = new File(root + "/.vamix/history.txt");
+		// write to history
+		if (!history.exists()) {
+			history.createNewFile();
+		}
+		boolean isRepeat = false;
+		BufferedReader br = new BufferedReader(new FileReader(history));
+		try {
+
+			String line = br.readLine();
+
+			while (line != null) {
+				// check if the file already exists
+				if (Main.file.getAbsolutePath().equals(line)) {
+					isRepeat = true;
+					break;
+				}
+				line = br.readLine();
+			}
+		} finally {
+			br.close();
+		}
+		if (!isRepeat) {
+			FileWriter fw = new FileWriter(history, true);
+			fw.write(Main.file.getAbsolutePath() + "\n");
+			fw.close();
+		}
+	}
+
+	/**
+	 * method to ask user if the file is open source.
+	 * 
+	 * @return if the file is open source ,return true ,else return false.
+	 */
+	public static boolean isOpenSource() {
+		int yn = JOptionPane.showConfirmDialog(null,
+				"Is the media file open-source?", "Warning",
+				JOptionPane.YES_NO_OPTION);
+		if (yn == 0) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/**
+	 * the method to choose subtitle file
+	 * 
+	 * @return the chosen subtitle file
+	 */
+	public static File chooseSubtitle() {
+		final JFileChooser fc = new JFileChooser();
+		fc.addChoosableFileFilter(new FileNameExtensionFilter("subtitle/srt",
+				"srt"));
+		fc.setAcceptAllFileFilterUsed(false);
+		int returnVal = fc.showOpenDialog(null);
+		if (returnVal == JFileChooser.APPROVE_OPTION) {
+			File file = fc.getSelectedFile();
+			return file;
+
+		} else if (returnVal == JFileChooser.CANCEL_OPTION) {
+			return null;
+		}
+		return null;
+	}
 }

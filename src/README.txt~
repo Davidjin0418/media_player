@@ -1,5 +1,8 @@
+VAMIX Version 1.0 13/10/2014
 
-HOW TO RUN IT: Double click on the vamix jar file provided.
+PLEASE READ THE INSTRUCTION BELOW BEFORE USING VAMIX !!!!!!!
+
+HOW TO RUN IT: Double click on the jar file provided.
 
 ------------------------
 MAIN WINDOW INSTRUCTION 
@@ -89,6 +92,8 @@ PLAYING VIDEO/AUDIO FILE INSTRUCTION
 
 -You can control the current duration of the video/audio file by dragging the slider below the video (or black screen if it's audio file)
 
+-the right part of the player lists the history the user has played before on this computer ,the user can double click the element on the list to play the file.
+
 -Press Edit to manipulate the audio and video part of a video file. The progress bar below the edit button will show the progress of the operation you choose. You can cancel the operation by pressing edit button again
 
 THE FOLLOWING OPERATIONS ONLY APPLIES TO VIDEO FILE
@@ -99,8 +104,9 @@ THE FOLLOWING OPERATIONS ONLY APPLIES TO VIDEO FILE
 
 -Strip: This function will strip out the audio from the video file and the output will a video file with no audio. It will allows you to choose where to save the output file and the name of the output file.
 
--Extract: This function will extract the audio from the video file and output as mp3 file. It will allow you to choose where to save the output file and the name of the output file
+-Extract: This function will extract the audio from the video file and output as mp3 file. It will alow you to choose where to save the output file and the name of the output file
 
+-Screenshot:This function will take a screenshot of the video file by entering the specific time the user wants.
 
 
 
