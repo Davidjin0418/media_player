@@ -1,0 +1,1 @@
+HOW TO RUN IT: Double click on the vamix jar file provided.
